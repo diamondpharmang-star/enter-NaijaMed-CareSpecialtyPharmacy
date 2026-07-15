@@ -21,3 +21,11 @@ export const CATEGORY_BADGE_CLASSES: Record<string, string> = {
   rare_drugs: "bg-category-rare text-category-rare-foreground",
   weight_loss: "bg-category-weightloss text-category-weightloss-foreground",
 };
+
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}

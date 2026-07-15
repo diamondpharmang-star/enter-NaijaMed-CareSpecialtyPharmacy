@@ -16,14 +16,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Upload, Check } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Upload, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { formatNaira } from "@/lib/pharmacy";
+import { formatNaira, slugify } from "@/lib/pharmacy";
 import type { Tables as DbTables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -34,6 +55,11 @@ type Product = DbTables<"products">;
 const PAYMENT_STATUSES = ["pending", "paid", "failed"] as const;
 const ORDER_STATUSES = ["processing", "shipped", "delivered", "cancelled"] as const;
 const QUOTE_STATUSES = ["new", "contacted", "quoted", "closed"] as const;
+const PRODUCT_CATEGORIES = [
+  { value: "oncology", label: "Oncology" },
+  { value: "rare_drugs", label: "Rare Drugs" },
+  { value: "weight_loss", label: "Weight Loss" },
+] as const;
 const PRODUCT_IMAGE_BUCKET = "product-images";
 const MAX_IMAGE_SIZE_MB = 10;
 const ALLOWED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
@@ -201,6 +227,306 @@ function ProductPriceEditCell({
   );
 }
 
+function ProductNameEditCell({
+  product,
+  onUpdated,
+}: {
+  product: Product;
+  onUpdated: (productId: string, updates: Partial<Product>) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(product.name);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      toast.error("Product name cannot be empty.");
+      return;
+    }
+    if (trimmed === product.name) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSaving(true);
+    const { error } = await supabase
+      .from("products")
+      .update({ name: trimmed })
+      .eq("id", product.id);
+    setIsSaving(false);
+
+    if (error) {
+      toast.error("Failed to update name.");
+      return;
+    }
+
+    onUpdated(product.id, { name: trimmed });
+    toast.success("Product name updated.");
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setName(product.name);
+    setIsEditing(false);
+  };
+
+  if (!isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{product.name}</span>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsEditing(true)}>
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-56"
+        autoFocus
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSave();
+          if (e.key === "Escape") handleCancel();
+        }}
+      />
+      <Button variant="outline" size="icon" className="h-9 w-9" disabled={isSaving} onClick={handleSave}>
+        {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+      </Button>
+      <Button variant="ghost" size="icon" className="h-9 w-9" disabled={isSaving} onClick={handleCancel}>
+        <X className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+function DeleteProductButton({
+  product,
+  onDeleted,
+}: {
+  product: Product;
+  onDeleted: (productId: string) => void;
+}) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const { error } = await supabase.from("products").delete().eq("id", product.id);
+    setIsDeleting(false);
+
+    if (error) {
+      toast.error("Failed to delete product. It may be referenced by existing orders.");
+      return;
+    }
+
+    onDeleted(product.id);
+    toast.success(`${product.name} deleted.`);
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {product.name}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently remove this medication from the catalog. This action cannot be
+            undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function AddProductDialog({ onCreated }: { onCreated: (product: Product) => void }) {
+  const [open, setOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    category: "oncology" as (typeof PRODUCT_CATEGORIES)[number]["value"],
+    description: "",
+    price: "",
+    b2b_price: "",
+    stock_quantity: "0",
+  });
+
+  const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+
+  const resetForm = () =>
+    setForm({
+      name: "",
+      category: "oncology",
+      description: "",
+      price: "",
+      b2b_price: "",
+      stock_quantity: "0",
+    });
+
+  const handleCreate = async () => {
+    const trimmedName = form.name.trim();
+    if (!trimmedName) {
+      toast.error("Enter a medication name.");
+      return;
+    }
+
+    const parsedPrice = form.price.trim() === "" ? null : Number(form.price);
+    const parsedB2bPrice = form.b2b_price.trim() === "" ? null : Number(form.b2b_price);
+    const parsedStock = Number(form.stock_quantity) || 0;
+
+    if (parsedPrice !== null && (Number.isNaN(parsedPrice) || parsedPrice < 0)) {
+      toast.error("Enter a valid retail price.");
+      return;
+    }
+    if (parsedB2bPrice !== null && (Number.isNaN(parsedB2bPrice) || parsedB2bPrice < 0)) {
+      toast.error("Enter a valid wholesale price.");
+      return;
+    }
+
+    setIsSaving(true);
+    const baseSlug = slugify(trimmedName);
+    const slug = `${baseSlug}-${crypto.randomUUID().slice(0, 6)}`;
+
+    const { data, error } = await supabase
+      .from("products")
+      .insert({
+        name: trimmedName,
+        slug,
+        category: form.category,
+        description: form.description || null,
+        price: parsedPrice,
+        b2b_price: parsedB2bPrice,
+        stock_quantity: parsedStock,
+      })
+      .select()
+      .single();
+
+    setIsSaving(false);
+
+    if (error || !data) {
+      toast.error("Failed to create product.");
+      return;
+    }
+
+    onCreated(data);
+    toast.success(`${trimmedName} added to catalog.`);
+    resetForm();
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" /> Add product
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Add new medication</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="new_product_name">Medication name</Label>
+            <Input
+              id="new_product_name"
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              placeholder="e.g. Keytruda 100mg Injection"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Category</Label>
+            <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRODUCT_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="new_product_description">Description</Label>
+            <Textarea
+              id="new_product_description"
+              rows={3}
+              value={form.description}
+              onChange={(e) => updateField("description", e.target.value)}
+              placeholder="Brief description of the medication and its use"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="new_product_price">Retail price (₦)</Label>
+              <Input
+                id="new_product_price"
+                type="number"
+                min="0"
+                placeholder="Leave blank for price on request"
+                value={form.price}
+                onChange={(e) => updateField("price", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="new_product_b2b_price">Wholesale price (₦)</Label>
+              <Input
+                id="new_product_b2b_price"
+                type="number"
+                min="0"
+                value={form.b2b_price}
+                onChange={(e) => updateField("b2b_price", e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="new_product_stock">Stock quantity</Label>
+            <Input
+              id="new_product_stock"
+              type="number"
+              min="0"
+              value={form.stock_quantity}
+              onChange={(e) => updateField("stock_quantity", e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleCreate} disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Create medication
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 const AdminOrders = () => {
   const { profile, isLoading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -254,6 +580,14 @@ const AdminOrders = () => {
 
   const handleProductUpdated = (productId: string, updates: Partial<Product>) => {
     setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, ...updates } : p)));
+  };
+
+  const handleProductCreated = (product: Product) => {
+    setProducts((prev) => [...prev, product].sort((a, b) => a.name.localeCompare(b.name)));
+  };
+
+  const handleProductDeleted = (productId: string) => {
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
   };
 
   if (!authLoading && profile && profile.role !== "admin") {
@@ -420,10 +754,13 @@ const AdminOrders = () => {
             </TabsContent>
 
             <TabsContent value="products">
-              <p className="mt-6 mb-4 text-sm text-muted-foreground">
-                Upload a photo and set retail / wholesale prices for each medication one by one.
-                Leave a price field blank to show "Price on request" on the storefront.
-              </p>
+              <div className="mt-6 mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Add, edit, or remove medications, upload photos, and set retail / wholesale prices.
+                  Leave a price field blank to show "Price on request" on the storefront.
+                </p>
+                <AddProductDialog onCreated={handleProductCreated} />
+              </div>
               {products.length === 0 ? (
                 <p className="text-muted-foreground">No products yet.</p>
               ) : (
@@ -435,14 +772,15 @@ const AdminOrders = () => {
                         <TableHead>Category</TableHead>
                         <TableHead>Photo</TableHead>
                         <TableHead>Price (₦)</TableHead>
+                        <TableHead className="text-right">Delete</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {products.map((product) => (
                         <TableRow key={product.id}>
                           <TableCell className="font-medium">
-                            {product.name}
-                            <p className="text-xs text-muted-foreground">
+                            <ProductNameEditCell product={product} onUpdated={handleProductUpdated} />
+                            <p className="mt-1 text-xs text-muted-foreground">
                               {product.price !== null
                                 ? formatNaira(Number(product.price))
                                 : "Price on request"}
@@ -461,6 +799,9 @@ const AdminOrders = () => {
                           </TableCell>
                           <TableCell>
                             <ProductPriceEditCell product={product} onUpdated={handleProductUpdated} />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DeleteProductButton product={product} onDeleted={handleProductDeleted} />
                           </TableCell>
                         </TableRow>
                       ))}

@@ -1,0 +1,102 @@
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Search } from "lucide-react";
+import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { ProductCard } from "@/components/pharmacy/ProductCard";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { CATEGORY_LABELS } from "@/lib/pharmacy";
+import type { Tables } from "@/integrations/supabase/types";
+import { cn } from "@/lib/utils";
+
+type Product = Tables<"products">;
+
+const CATEGORIES = ["all", "oncology", "rare_drugs", "weight_loss"] as const;
+
+const Shop = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeCategory = searchParams.get("category") || "all";
+  const [search, setSearch] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    let query = supabase.from("products").select("*").eq("is_active", true);
+    if (activeCategory !== "all") {
+      query = query.eq("category", activeCategory);
+    }
+    query.order("created_at", { ascending: false }).then(({ data }) => {
+      setProducts(data ?? []);
+      setIsLoading(false);
+    });
+  }, [activeCategory]);
+
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const setCategory = (category: string) => {
+    if (category === "all") {
+      searchParams.delete("category");
+    } else {
+      searchParams.set("category", category);
+    }
+    setSearchParams(searchParams);
+  };
+
+  return (
+    <PharmacyLayout>
+      <section className="border-b border-border bg-gradient-subtle">
+        <div className="container py-10">
+          <h1 className="text-3xl font-bold text-foreground">Shop Medication</h1>
+          <p className="mt-2 text-muted-foreground">
+            Browse our specialty catalog of oncology, rare disease, and weight-loss medication.
+          </p>
+        </div>
+      </section>
+
+      <section className="container py-10">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((cat) => (
+              <Button
+                key={cat}
+                variant={activeCategory === cat ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCategory(cat)}
+                className={cn(activeCategory === cat && "shadow-elegant")}
+              >
+                {cat === "all" ? "All Products" : CATEGORY_LABELS[cat]}
+              </Button>
+            ))}
+          </div>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search medication..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        {isLoading ? (
+          <p className="py-16 text-center text-muted-foreground">Loading products...</p>
+        ) : filteredProducts.length === 0 ? (
+          <p className="py-16 text-center text-muted-foreground">No products found.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+    </PharmacyLayout>
+  );
+};
+
+export default Shop;

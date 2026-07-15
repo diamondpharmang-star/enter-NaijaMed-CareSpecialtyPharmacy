@@ -62,7 +62,26 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				category: {
+					oncology: 'hsl(var(--category-oncology))',
+					'oncology-foreground': 'hsl(var(--category-oncology-foreground))',
+					rare: 'hsl(var(--category-rare))',
+					'rare-foreground': 'hsl(var(--category-rare-foreground))',
+					weightloss: 'hsl(var(--category-weightloss))',
+					'weightloss-foreground': 'hsl(var(--category-weightloss-foreground))'
 				}
+			},
+			backgroundImage: {
+				'gradient-hero': 'var(--gradient-hero)',
+				'gradient-subtle': 'var(--gradient-subtle)'
+			},
+			boxShadow: {
+				elegant: 'var(--shadow-elegant)',
+				glow: 'var(--shadow-glow)'
+			},
+			transitionProperty: {
+				smooth: 'var(--transition-smooth)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

@@ -3360,13 +3360,229 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      b2b_quote_requests: {
+        Row: {
+          business_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          estimated_quantity: string | null
+          id: string
+          license_number: string | null
+          message: string | null
+          phone: string
+          products_needed: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          business_name: string
+          contact_name: string
+          created_at?: string
+          email: string
+          estimated_quantity?: string | null
+          id?: string
+          license_number?: string | null
+          message?: string | null
+          phone: string
+          products_needed: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          business_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          estimated_quantity?: string | null
+          id?: string
+          license_number?: string | null
+          message?: string | null
+          phone?: string
+          products_needed?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          city: string
+          created_at: string
+          customer_name: string
+          delivery_address: string
+          email: string
+          id: string
+          order_status: string
+          payment_method: string
+          payment_status: string
+          paystack_reference: string | null
+          phone: string
+          state: string
+          total_amount: number
+          user_id: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          customer_name: string
+          delivery_address: string
+          email: string
+          id?: string
+          order_status?: string
+          payment_method: string
+          payment_status?: string
+          paystack_reference?: string | null
+          phone: string
+          state: string
+          total_amount: number
+          user_id?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          customer_name?: string
+          delivery_address?: string
+          email?: string
+          id?: string
+          order_status?: string
+          payment_method?: string
+          payment_status?: string
+          paystack_reference?: string | null
+          phone?: string
+          state?: string
+          total_amount?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          b2b_price: number | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price: number
+          slug: string
+          stock_quantity: number
+        }
+        Insert: {
+          b2b_price?: number | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price: number
+          slug: string
+          stock_quantity?: number
+        }
+        Update: {
+          b2b_price?: number | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price?: number
+          slug?: string
+          stock_quantity?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          account_type: string
+          business_license_number: string | null
+          business_name: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: string
+        }
+        Insert: {
+          account_type?: string
+          business_license_number?: string | null
+          business_name?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          role?: string
+        }
+        Update: {
+          account_type?: string
+          business_license_number?: string | null
+          business_name?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

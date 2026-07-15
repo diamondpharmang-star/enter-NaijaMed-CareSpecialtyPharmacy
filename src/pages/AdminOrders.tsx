@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import {
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Loader2, Upload } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira } from "@/lib/pharmacy";
@@ -26,15 +28,105 @@ import { toast } from "sonner";
 
 type Order = DbTables<"orders">;
 type MedicationQuoteRequest = DbTables<"medication_quote_requests">;
+type Product = DbTables<"products">;
 
 const PAYMENT_STATUSES = ["pending", "paid", "failed"] as const;
 const ORDER_STATUSES = ["processing", "shipped", "delivered", "cancelled"] as const;
 const QUOTE_STATUSES = ["new", "contacted", "quoted", "closed"] as const;
+const PRODUCT_IMAGE_BUCKET = "product-images";
+const MAX_IMAGE_SIZE_MB = 10;
+const ALLOWED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
+
+function ProductImageUploadCell({
+  product,
+  onUploaded,
+}: {
+  product: Product;
+  onUploaded: (productId: string, imageUrl: string) => void;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const maxSizeBytes = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      toast.error(`Image is too large. Maximum size is ${MAX_IMAGE_SIZE_MB}MB.`);
+      return;
+    }
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!ext || !ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
+      toast.error("Unsupported file type. Please upload a JPG, PNG, WEBP, or GIF image.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const path = `products/${product.id}-${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from(PRODUCT_IMAGE_BUCKET)
+        .upload(path, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
+      const imageUrl = data.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from("products")
+        .update({ image_url: imageUrl })
+        .eq("id", product.id);
+
+      if (updateError) throw updateError;
+
+      onUploaded(product.id, imageUrl);
+      toast.success(`Image updated for ${product.name}`);
+    } catch (err) {
+      toast.error("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+        {product.image_url && (
+          <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+        )}
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={isUploading}
+        onClick={() => inputRef.current?.click()}
+      >
+        {isUploading ? (
+          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Upload className="mr-2 h-3.5 w-3.5" />
+        )}
+        {isUploading ? "Uploading..." : "Upload photo"}
+      </Button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+    </div>
+  );
+}
 
 const AdminOrders = () => {
   const { profile, isLoading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [quoteRequests, setQuoteRequests] = useState<MedicationQuoteRequest[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = () => {
@@ -44,9 +136,11 @@ const AdminOrders = () => {
         .from("medication_quote_requests")
         .select("*")
         .order("created_at", { ascending: false }),
-    ]).then(([ordersRes, quotesRes]) => {
+      supabase.from("products").select("*").order("name", { ascending: true }),
+    ]).then(([ordersRes, quotesRes, productsRes]) => {
       setOrders(ordersRes.data ?? []);
       setQuoteRequests(quotesRes.data ?? []);
+      setProducts(productsRes.data ?? []);
       setIsLoading(false);
     });
   };
@@ -75,6 +169,10 @@ const AdminOrders = () => {
     setQuoteRequests((prev) => prev.map((q) => (q.id === id ? { ...q, ...updates } : q)));
   };
 
+  const handleProductImageUploaded = (productId: string, imageUrl: string) => {
+    setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, image_url: imageUrl } : p)));
+  };
+
   if (!authLoading && profile && profile.role !== "admin") {
     return <Navigate to="/" replace />;
   }
@@ -91,6 +189,7 @@ const AdminOrders = () => {
             <TabsList>
               <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
               <TabsTrigger value="quotes">Quote Requests ({quoteRequests.length})</TabsTrigger>
+              <TabsTrigger value="products">Product Images ({products.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="orders">
@@ -228,6 +327,46 @@ const AdminOrders = () => {
                                 ))}
                               </SelectContent>
                             </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="products">
+              <p className="mt-6 mb-4 text-sm text-muted-foreground">
+                Upload a photo for each medication one by one. Uploaded images replace the current
+                photo immediately on the storefront.
+              </p>
+              {products.length === 0 ? (
+                <p className="text-muted-foreground">No products yet.</p>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Medication</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Photo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {products.map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {product.category.replace("_", " ")}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <ProductImageUploadCell
+                              product={product}
+                              onUploaded={handleProductImageUploaded}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}

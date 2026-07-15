@@ -35,7 +35,6 @@ export function ProductCard({ product }: { product: Product }) {
             <img
               src={product.image_url}
               alt={product.name}
-              crossOrigin="anonymous"
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           )}

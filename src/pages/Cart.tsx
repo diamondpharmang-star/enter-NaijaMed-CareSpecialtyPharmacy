@@ -41,7 +41,6 @@ const Cart = () => {
                     <img
                       src={item.image_url}
                       alt={item.product_name}
-                      crossOrigin="anonymous"
                       className="h-full w-full object-cover"
                     />
                   )}

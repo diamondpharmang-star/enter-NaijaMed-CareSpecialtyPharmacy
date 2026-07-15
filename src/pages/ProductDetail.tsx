@@ -90,7 +90,6 @@ const ProductDetail = () => {
               <img
                 src={product.image_url}
                 alt={product.name}
-                crossOrigin="anonymous"
                 className="h-full w-full object-cover"
               />
             )}

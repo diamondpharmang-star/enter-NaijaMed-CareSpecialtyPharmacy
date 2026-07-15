@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { WHATSAPP_NUMBER, WHATSAPP_LINK } from "@/lib/pharmacy";
+import { WHATSAPP_LINK } from "@/lib/pharmacy";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -179,9 +179,9 @@ const RequestQuote = () => {
               </ul>
               <div className="mt-5 border-t border-border pt-5">
                 <p className="text-sm text-muted-foreground">Prefer to chat directly?</p>
-                <Button asChild variant="secondary" className="mt-3 w-full">
-                  <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                    <MessageCircle className="mr-2 h-4 w-4" /> Chat on WhatsApp: {WHATSAPP_NUMBER}
+                <Button asChild variant="secondary" size="icon" className="mt-3 h-12 w-12 rounded-full">
+                  <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp">
+                    <MessageCircle className="h-5 w-5" />
                   </a>
                 </Button>
               </div>

@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ShieldCheck, Truck, Lock, Stethoscope, ArrowRight, MessageCircle } from "lucide-react";
+import { ShieldCheck, Truck, Lock, Stethoscope, ArrowRight, MessageCircle, Camera, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
+import { WHATSAPP_LINK } from "@/lib/pharmacy";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products">;
@@ -38,6 +39,12 @@ const TRUST_POINTS = [
   { icon: Truck, title: "Nationwide delivery", desc: "Cold-chain shipping to all 36 states + FCT." },
   { icon: Lock, title: "Secure checkout", desc: "Paystack encrypted payments or bank transfer." },
   { icon: Stethoscope, title: "Pharmacist support", desc: "Speak with a licensed pharmacist before you order." },
+];
+
+const QUOTE_STEPS = [
+  { icon: Stethoscope, text: "Tell us the drug & strength" },
+  { icon: Camera, text: "Add a photo (optional)" },
+  { icon: Send, text: "Get a reply on WhatsApp" },
 ];
 
 const Index = () => {
@@ -141,16 +148,60 @@ const Index = () => {
       </section>
 
       <section className="container py-16">
-        <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-secondary/40 p-10 text-center">
-          <MessageCircle className="h-8 w-8 text-primary" />
-          <h2 className="text-2xl font-bold text-foreground">Can't find your medication?</h2>
-          <p className="max-w-lg text-muted-foreground">
-            Tell us the drug name and strength, upload a photo if you have one, and we'll send you
-            a price quote directly on WhatsApp.
-          </p>
-          <Button asChild size="lg">
-            <Link to="/request-quote">Request a price quote</Link>
-          </Button>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-hero text-primary-foreground shadow-elegant">
+          <div className="grid grid-cols-1 items-center gap-8 p-8 md:grid-cols-2 md:p-12">
+            <div className="flex flex-col items-start gap-5">
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-4 py-1 text-sm font-medium backdrop-blur">
+                <MessageCircle className="h-3.5 w-3.5" /> Personalized sourcing service
+              </span>
+              <h2 className="text-2xl font-bold leading-tight md:text-3xl">
+                Can't find your medication?
+              </h2>
+              <p className="max-w-md text-primary-foreground/85">
+                Tell us the drug name and strength — with a photo if you have one — and our
+                pharmacist team will reply on WhatsApp with pricing and availability.
+              </p>
+
+              <ul className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-6">
+                {QUOTE_STEPS.map((step) => (
+                  <li key={step.text} className="flex items-center gap-2 text-sm text-primary-foreground/90">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-foreground/10">
+                      <step.icon className="h-3.5 w-3.5" />
+                    </span>
+                    {step.text}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <Button asChild size="lg" variant="secondary">
+                  <Link to="/request-quote">
+                    Request a price quote <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="icon"
+                  variant="outline"
+                  className="h-11 w-11 rounded-full border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
+                >
+                  <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp">
+                    <MessageCircle className="h-5 w-5" />
+                  </a>
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative hidden md:block">
+              <div className="absolute -inset-6 rounded-3xl bg-primary-foreground/10 blur-2xl" />
+              <img
+                src="https://cdn.enter.pro/resources/uid_100178098/pharmacist-support_8757b2a0.png"
+                alt="Pharmacist ready to help on WhatsApp"
+                crossOrigin="anonymous"
+                className="relative mx-auto h-72 w-full max-w-sm rounded-2xl object-cover shadow-glow"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

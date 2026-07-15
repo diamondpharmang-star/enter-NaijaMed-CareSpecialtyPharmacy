@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
-import { formatNaira, CATEGORY_LABELS, CATEGORY_BADGE_CLASSES } from "@/lib/pharmacy";
+import { formatNaira, whatsappQuoteLink, CATEGORY_LABELS, CATEGORY_BADGE_CLASSES } from "@/lib/pharmacy";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -12,8 +12,10 @@ type Product = Tables<"products">;
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const hasPrice = product.price !== null;
 
   const handleAddToCart = () => {
+    if (product.price === null) return;
     addItem({
       product_id: product.id,
       product_name: product.name,
@@ -50,19 +52,27 @@ export function ProductCard({ product }: { product: Product }) {
         </Link>
         <p className="line-clamp-2 text-sm text-muted-foreground">{product.description}</p>
         <div className="mt-auto pt-2 text-lg font-bold text-primary">
-          {formatNaira(Number(product.price))}
+          {hasPrice ? formatNaira(Number(product.price)) : "Price on request"}
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button
-          className="w-full"
-          variant="default"
-          onClick={handleAddToCart}
-          disabled={product.stock_quantity <= 0}
-        >
-          <ShoppingCart className="mr-2 h-4 w-4" />
-          {product.stock_quantity > 0 ? "Add to cart" : "Out of stock"}
-        </Button>
+        {hasPrice ? (
+          <Button
+            className="w-full"
+            variant="default"
+            onClick={handleAddToCart}
+            disabled={product.stock_quantity <= 0}
+          >
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            {product.stock_quantity > 0 ? "Add to cart" : "Out of stock"}
+          </Button>
+        ) : (
+          <Button asChild className="w-full" variant="secondary">
+            <a href={whatsappQuoteLink(product.name)} target="_blank" rel="noreferrer">
+              <MessageCircle className="mr-2 h-4 w-4" /> Request quote on WhatsApp
+            </a>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

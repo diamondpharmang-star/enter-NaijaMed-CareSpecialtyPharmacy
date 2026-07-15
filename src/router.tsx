@@ -9,6 +9,7 @@ import Signup from "./pages/Signup";
 import B2BSignup from "./pages/B2BSignup";
 import AccountOrders from "./pages/AccountOrders";
 import AdminOrders from "./pages/AdminOrders";
+import RequestQuote from "./pages/RequestQuote";
 import NotFound from "./pages/NotFound";
 
 export const routers = [
@@ -66,6 +67,11 @@ export const routers = [
     path: "/admin/orders",
     name: "admin-orders",
     element: <AdminOrders />,
+  },
+  {
+    path: "/request-quote",
+    name: "request-quote",
+    element: <RequestQuote />,
   },
   /* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */
   {

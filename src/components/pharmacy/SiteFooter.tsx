@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
 import { ShieldCheck, Truck, Lock, MapPin, Mail, MessageCircle } from "lucide-react";
+import { WHATSAPP_NUMBER, WHATSAPP_LINK } from "@/lib/pharmacy";
 
 const SUPPORT_EMAIL = "care@diamondpharmacare.ng";
 const STORE_ADDRESS = "116 Okota Road, Lagos";
-const WHATSAPP_NUMBER = "+2347042574473";
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}`;
 
 export function SiteFooter() {
   return (
@@ -46,6 +45,7 @@ export function SiteFooter() {
             <li><Link to="/shop?category=oncology" className="hover:text-foreground">Oncology</Link></li>
             <li><Link to="/shop?category=rare_drugs" className="hover:text-foreground">Rare Drugs</Link></li>
             <li><Link to="/shop?category=weight_loss" className="hover:text-foreground">Weight Loss</Link></li>
+            <li><Link to="/request-quote" className="hover:text-foreground">Request unlisted medication</Link></li>
             <li><Link to="/b2b/signup" className="hover:text-foreground">Wholesale (B2B)</Link></li>
           </ul>
         </div>

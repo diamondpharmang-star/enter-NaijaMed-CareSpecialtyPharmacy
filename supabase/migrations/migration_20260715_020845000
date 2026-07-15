@@ -1,0 +1,43 @@
+-- Allow price-on-request products (no listed price)
+alter table public.products alter column price drop not null;
+
+-- Table for unlisted-medication price quote requests from customers
+create table public.medication_quote_requests (
+  id uuid primary key default gen_random_uuid(),
+  drug_name text not null,
+  strength text,
+  photo_url text,
+  whatsapp_number text not null,
+  status text not null default 'new' check (status in ('new','contacted','quoted','closed')),
+  created_at timestamptz not null default now()
+);
+
+alter table public.medication_quote_requests enable row level security;
+
+create policy "Anyone can submit a medication quote request"
+  on public.medication_quote_requests for insert
+  with check (true);
+
+create policy "Admins can view medication quote requests"
+  on public.medication_quote_requests for select
+  using (public.is_admin());
+
+create policy "Admins can update medication quote requests"
+  on public.medication_quote_requests for update
+  using (public.is_admin())
+  with check (public.is_admin());
+
+-- Public storage bucket for customer-uploaded drug photos on quote requests
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('quote-photos', 'quote-photos', true, 10485760, array['image/jpeg','image/png','image/webp','image/gif']::text[])
+on conflict (id) do nothing;
+
+create policy "Public can read quote photos"
+  on storage.objects for select
+  to public
+  using (bucket_id = 'quote-photos');
+
+create policy "Anyone can upload quote photos"
+  on storage.objects for insert
+  to public
+  with check (bucket_id = 'quote-photos');

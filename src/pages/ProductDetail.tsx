@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ShoppingCart, Minus, Plus, ArrowLeft } from "lucide-react";
+import { ShoppingCart, Minus, Plus, ArrowLeft, MessageCircle } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatNaira, CATEGORY_LABELS, CATEGORY_BADGE_CLASSES } from "@/lib/pharmacy";
+import { formatNaira, whatsappQuoteLink, CATEGORY_LABELS, CATEGORY_BADGE_CLASSES } from "@/lib/pharmacy";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -36,10 +36,12 @@ const ProductDetail = () => {
   }, [slug]);
 
   const isB2B = profile?.account_type === "b2b";
-  const displayPrice = product ? Number(isB2B && product.b2b_price ? product.b2b_price : product.price) : 0;
+  const hasPrice = product?.price !== null && product?.price !== undefined;
+  const displayPrice =
+    product && hasPrice ? Number(isB2B && product.b2b_price ? product.b2b_price : product.price) : 0;
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !hasPrice) return;
     addItem(
       {
         product_id: product.id,
@@ -102,42 +104,54 @@ const ProductDetail = () => {
             <p className="text-muted-foreground">{product.description}</p>
 
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold text-primary">{formatNaira(displayPrice)}</span>
-              {isB2B && product.b2b_price && (
+              <span className="text-3xl font-bold text-primary">
+                {hasPrice ? formatNaira(displayPrice) : "Price on request"}
+              </span>
+              {hasPrice && isB2B && product.b2b_price && (
                 <span className="text-sm text-muted-foreground line-through">
                   {formatNaira(Number(product.price))}
                 </span>
               )}
-              {isB2B && product.b2b_price && (
+              {hasPrice && isB2B && product.b2b_price && (
                 <Badge variant="secondary">Wholesale price</Badge>
               )}
             </div>
 
             <p className="text-sm text-muted-foreground">
-              {product.stock_quantity > 0
-                ? `${product.stock_quantity} units in stock`
-                : "Currently out of stock"}
+              {hasPrice
+                ? product.stock_quantity > 0
+                  ? `${product.stock_quantity} units in stock`
+                  : "Currently out of stock"
+                : "Contact us on WhatsApp for availability and pricing."}
             </p>
 
-            <div className="mt-2 flex items-center gap-4">
-              <div className="flex items-center rounded-md border border-input">
-                <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="w-10 text-center font-medium">{quantity}</span>
-                <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => q + 1)}>
-                  <Plus className="h-4 w-4" />
+            {hasPrice ? (
+              <div className="mt-2 flex items-center gap-4">
+                <div className="flex items-center rounded-md border border-input">
+                  <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="w-10 text-center font-medium">{quantity}</span>
+                  <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => q + 1)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button
+                  size="lg"
+                  className="flex-1"
+                  onClick={handleAddToCart}
+                  disabled={product.stock_quantity <= 0}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" /> Add to cart
                 </Button>
               </div>
-              <Button
-                size="lg"
-                className="flex-1"
-                onClick={handleAddToCart}
-                disabled={product.stock_quantity <= 0}
-              >
-                <ShoppingCart className="mr-2 h-4 w-4" /> Add to cart
+            ) : (
+              <Button asChild size="lg" variant="secondary" className="mt-2">
+                <a href={whatsappQuoteLink(product.name)} target="_blank" rel="noreferrer">
+                  <MessageCircle className="mr-2 h-4 w-4" /> Request price quote on WhatsApp
+                </a>
               </Button>
-            </div>
+            )}
 
             <div className="mt-6 rounded-lg border border-border bg-secondary/40 p-4 text-sm text-muted-foreground">
               Specialty medication in this category may require pharmacist review before dispatch.

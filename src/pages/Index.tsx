@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ShieldCheck, Truck, Lock, Stethoscope, ArrowRight } from "lucide-react";
+import { ShieldCheck, Truck, Lock, Stethoscope, ArrowRight, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
@@ -141,6 +141,20 @@ const Index = () => {
       </section>
 
       <section className="container py-16">
+        <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-secondary/40 p-10 text-center">
+          <MessageCircle className="h-8 w-8 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">Can't find your medication?</h2>
+          <p className="max-w-lg text-muted-foreground">
+            Tell us the drug name and strength, upload a photo if you have one, and we'll send you
+            a price quote directly on WhatsApp.
+          </p>
+          <Button asChild size="lg">
+            <Link to="/request-quote">Request a price quote</Link>
+          </Button>
+        </div>
+      </section>
+
+      <section className="container pb-16">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST_POINTS.map((point) => (
             <div key={point.title} className="flex flex-col items-start gap-3">

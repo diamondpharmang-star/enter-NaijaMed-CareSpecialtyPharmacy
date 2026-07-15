@@ -3405,6 +3405,36 @@ export type Database = {
         }
         Relationships: []
       }
+      medication_quote_requests: {
+        Row: {
+          created_at: string
+          drug_name: string
+          id: string
+          photo_url: string | null
+          status: string
+          strength: string | null
+          whatsapp_number: string
+        }
+        Insert: {
+          created_at?: string
+          drug_name: string
+          id?: string
+          photo_url?: string | null
+          status?: string
+          strength?: string | null
+          whatsapp_number: string
+        }
+        Update: {
+          created_at?: string
+          drug_name?: string
+          id?: string
+          photo_url?: string | null
+          status?: string
+          strength?: string | null
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string
@@ -3506,7 +3536,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           name: string
-          price: number
+          price: number | null
           slug: string
           stock_quantity: number
         }
@@ -3519,7 +3549,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name: string
-          price: number
+          price?: number | null
           slug: string
           stock_quantity?: number
         }
@@ -3532,7 +3562,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name?: string
-          price?: number
+          price?: number | null
           slug?: string
           stock_quantity?: number
         }

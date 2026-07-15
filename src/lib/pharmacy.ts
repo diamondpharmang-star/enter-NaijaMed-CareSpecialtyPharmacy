@@ -2,6 +2,14 @@ export function formatNaira(amount: number): string {
   return `₦${Math.round(amount).toLocaleString("en-NG")}`;
 }
 
+export const WHATSAPP_NUMBER = "+2347042574473";
+export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}`;
+
+export function whatsappQuoteLink(productName: string): string {
+  const message = `Hello Diamond Pharma Care, I'd like a price quote for: ${productName}`;
+  return `${WHATSAPP_LINK}?text=${encodeURIComponent(message)}`;
+}
+
 export const CATEGORY_LABELS: Record<string, string> = {
   oncology: "Oncology",
   rare_drugs: "Rare Drugs",

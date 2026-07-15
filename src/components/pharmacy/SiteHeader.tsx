@@ -20,6 +20,7 @@ const NAV_LINKS = [
   { to: "/shop?category=oncology", label: "Oncology" },
   { to: "/shop?category=rare_drugs", label: "Rare Drugs" },
   { to: "/shop?category=weight_loss", label: "Weight Loss" },
+  { to: "/request-quote", label: "Request Quote" },
   { to: "/b2b/signup", label: "Wholesale (B2B)" },
 ];
 

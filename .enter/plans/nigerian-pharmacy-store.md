@@ -1,7 +1,7 @@
-# Nigerian Online Pharmacy Store (Oncology, Rare Drugs, Weight Loss)
+# Diamond Pharma Care — Nigerian Online Pharmacy Store (Oncology, Rare Drugs, Weight Loss)
 
 ## Context
-Build a real e-commerce pharmacy site for the Nigerian market specializing in Oncology, Rare Drugs, and Weight Loss medication, with live checkout (Paystack + manual bank transfer), optional retail customer accounts, and a full B2B (wholesale) account with bulk pricing/quote requests. Persisted products/orders and secure payment verification require a backend, so **Enter Cloud (Supabase) must be enabled** before implementation, followed by adding the Paystack secret key.
+Build a real e-commerce pharmacy site named **Diamond Pharma Care** for the Nigerian market specializing in Oncology, Rare Drugs, and Weight Loss medication, with live checkout (Paystack + manual bank transfer), optional retail customer accounts, and a full B2B (wholesale) account with bulk pricing/quote requests. Persisted products/orders and secure payment verification require a backend, so **Enter Cloud (Supabase) must be enabled** before implementation, followed by adding the Paystack secret key.
 
 Confirmed decisions from user:
 - Payment: Paystack (card/bank/USSD) **and** manual bank transfer option.

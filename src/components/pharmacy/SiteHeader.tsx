@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Menu, User as UserIcon, LogOut, Package, ShieldCheck } from "lucide-react";
+import { ShoppingCart, Menu, User as UserIcon, LogOut, Package, ShieldCheck, Search, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,8 @@ export function SiteHeader() {
   const { categories } = useCategories();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const navLinks = [
     { to: "/", label: "Home" },
@@ -30,6 +33,13 @@ export function SiteHeader() {
     { to: "/b2b/signup", label: "Wholesale (B2B)" },
   ];
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = searchQuery.trim();
+    navigate(trimmed ? `/shop?search=${encodeURIComponent(trimmed)}` : "/shop");
+    setMobileSearchOpen(false);
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container flex h-16 items-center justify-between gap-4">
@@ -37,24 +47,47 @@ export function SiteHeader() {
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <ShieldCheck className="h-5 w-5" />
           </span>
-          <span className="text-lg font-bold tracking-tight text-foreground">
+          <span className="hidden text-lg font-bold tracking-tight text-foreground sm:inline">
             Diamond Pharma Care
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden items-center gap-1 xl:flex">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               to={link.to}
-              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
+        <form onSubmit={handleSearchSubmit} className="hidden max-w-sm flex-1 md:block">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search medication..."
+              className="h-9 pl-9"
+              aria-label="Search medication"
+            />
+          </div>
+        </form>
+
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Search"
+            className="md:hidden"
+            onClick={() => setMobileSearchOpen((prev) => !prev)}
+          >
+            {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+          </Button>
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -107,7 +140,7 @@ export function SiteHeader() {
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
+              <Button variant="ghost" size="icon" className="xl:hidden" aria-label="Menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -139,6 +172,24 @@ export function SiteHeader() {
           </Sheet>
         </div>
       </div>
+
+      {mobileSearchOpen && (
+        <div className="border-t border-border bg-background px-4 py-3 md:hidden">
+          <form onSubmit={handleSearchSubmit}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search medication..."
+                className="pl-9"
+                aria-label="Search medication"
+              />
+            </div>
+          </form>
+        </div>
+      )}
     </header>
   );
 }

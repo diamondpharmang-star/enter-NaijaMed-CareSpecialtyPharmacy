@@ -15,10 +15,14 @@ type Product = Tables<"products">;
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeCategory = searchParams.get("category") || "all";
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { categories } = useCategories();
+
+  useEffect(() => {
+    setSearch(searchParams.get("search") || "");
+  }, [searchParams]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -35,6 +39,16 @@ const Shop = () => {
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const updateSearch = (value: string) => {
+    setSearch(value);
+    if (value) {
+      searchParams.set("search", value);
+    } else {
+      searchParams.delete("search");
+    }
+    setSearchParams(searchParams, { replace: true });
+  };
 
   const setCategory = (category: string) => {
     if (category === "all") {
@@ -84,7 +98,7 @@ const Shop = () => {
             <Input
               placeholder="Search medication..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateSearch(e.target.value)}
               className="pl-9"
             />
           </div>

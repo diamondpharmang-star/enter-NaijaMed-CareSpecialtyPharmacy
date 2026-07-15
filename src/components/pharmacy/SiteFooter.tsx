@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck, Truck, Lock, Phone, Mail } from "lucide-react";
+import { ShieldCheck, Truck, Lock, MapPin, Mail, MessageCircle } from "lucide-react";
 
 const SUPPORT_EMAIL = "care@diamondpharmacare.ng";
+const STORE_ADDRESS = "116 Okota Road, Lagos";
+const WHATSAPP_NUMBER = "+2347042574473";
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}`;
 
 export function SiteFooter() {
   return (
@@ -23,6 +26,17 @@ export function SiteFooter() {
             className="mt-3 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <Mail className="h-4 w-4 text-accent" /> {SUPPORT_EMAIL}
+          </a>
+          <div className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" /> {STORE_ADDRESS}
+          </div>
+          <a
+            href={WHATSAPP_LINK}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <MessageCircle className="h-4 w-4 text-accent" /> WhatsApp: {WHATSAPP_NUMBER}
           </a>
         </div>
 
@@ -50,7 +64,7 @@ export function SiteFooter() {
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
             <li className="flex items-center gap-2"><Lock className="h-4 w-4 text-accent" /> Secure Paystack checkout</li>
             <li className="flex items-center gap-2"><Truck className="h-4 w-4 text-accent" /> Nationwide delivery</li>
-            <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-accent" /> Pharmacist support line</li>
+            <li className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-accent" /> Pharmacist support on WhatsApp</li>
           </ul>
         </div>
       </div>

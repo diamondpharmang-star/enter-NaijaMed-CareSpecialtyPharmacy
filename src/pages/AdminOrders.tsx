@@ -513,91 +513,95 @@ function AddProductDialog({
           <Plus className="mr-2 h-4 w-4" /> Add product
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add new medication</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Medication photo</Label>
-            {photoPreview ? (
-              <div className="relative h-32 w-32 overflow-hidden rounded-lg border border-border">
-                <img src={photoPreview} alt="Selected medication" className="h-full w-full object-cover" />
+        <div className="space-y-3">
+          <div className="flex gap-3">
+            <div className="shrink-0 space-y-1.5">
+              <Label className="text-xs">Photo</Label>
+              {photoPreview ? (
+                <div className="relative h-20 w-20 overflow-hidden rounded-lg border border-border">
+                  <img src={photoPreview} alt="Selected medication" className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={clearPhoto}
+                    className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground/70 text-background"
+                    aria-label="Remove photo"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  onClick={clearPhoto}
-                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/70 text-background"
-                  aria-label="Remove photo"
+                  onClick={() => photoInputRef.current?.click()}
+                  className="flex h-20 w-20 flex-col items-center justify-center gap-0.5 rounded-lg border-2 border-dashed border-input text-muted-foreground hover:border-primary hover:text-primary"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <Upload className="h-4 w-4" />
+                  <span className="text-[10px]">Upload</span>
                 </button>
+              )}
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handlePhotoChange}
+              />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="new_product_name">Medication name</Label>
+                <Input
+                  id="new_product_name"
+                  value={form.name}
+                  onChange={(e) => updateField("name", e.target.value)}
+                  placeholder="e.g. Keytruda 100mg Injection"
+                />
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                className="flex h-32 w-32 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-input text-muted-foreground hover:border-primary hover:text-primary"
-              >
-                <Upload className="h-5 w-5" />
-                <span className="text-xs">Upload photo</span>
-              </button>
-            )}
-            <input
-              ref={photoInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              className="hidden"
-              onChange={handlePhotoChange}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="new_product_name">Medication name</Label>
-            <Input
-              id="new_product_name"
-              value={form.name}
-              onChange={(e) => updateField("name", e.target.value)}
-              placeholder="e.g. Keytruda 100mg Injection"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Category</Label>
-            <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.key} value={cat.key}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <div className="space-y-1.5">
+                <Label>Category</Label>
+                <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.key} value={cat.key}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="new_product_description">Description</Label>
             <Textarea
               id="new_product_description"
-              rows={3}
+              rows={2}
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
               placeholder="Brief description of the medication and its use"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="new_product_price">Retail price (₦)</Label>
+              <Label htmlFor="new_product_price" className="text-xs">Retail price (₦)</Label>
               <Input
                 id="new_product_price"
                 type="number"
                 min="0"
-                placeholder="Leave blank for price on request"
+                placeholder="Blank = on request"
                 value={form.price}
                 onChange={(e) => updateField("price", e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="new_product_b2b_price">Wholesale price (₦)</Label>
+              <Label htmlFor="new_product_b2b_price" className="text-xs">Wholesale price (₦)</Label>
               <Input
                 id="new_product_b2b_price"
                 type="number"
@@ -606,16 +610,16 @@ function AddProductDialog({
                 onChange={(e) => updateField("b2b_price", e.target.value)}
               />
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="new_product_stock">Stock quantity</Label>
-            <Input
-              id="new_product_stock"
-              type="number"
-              min="0"
-              value={form.stock_quantity}
-              onChange={(e) => updateField("stock_quantity", e.target.value)}
-            />
+            <div className="space-y-1.5">
+              <Label htmlFor="new_product_stock" className="text-xs">Stock qty</Label>
+              <Input
+                id="new_product_stock"
+                type="number"
+                min="0"
+                value={form.stock_quantity}
+                onChange={(e) => updateField("stock_quantity", e.target.value)}
+              />
+            </div>
           </div>
         </div>
         <DialogFooter>

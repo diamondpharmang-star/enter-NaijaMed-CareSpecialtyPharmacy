@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatNaira, whatsappQuoteLink, CATEGORY_LABELS, CATEGORY_BADGE_CLASSES } from "@/lib/pharmacy";
+import { formatNaira, whatsappQuoteLink, categoryBadgeClass } from "@/lib/pharmacy";
+import { useCategories } from "@/hooks/useCategories";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ const ProductDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { addItem } = useCart();
   const { profile } = useAuth();
+  const { categories, labelFor } = useCategories();
 
   useEffect(() => {
     if (!slug) return;
@@ -96,8 +98,8 @@ const ProductDetail = () => {
           </div>
 
           <div className="flex flex-col gap-4">
-            <Badge className={CATEGORY_BADGE_CLASSES[product.category]}>
-              {CATEGORY_LABELS[product.category]}
+            <Badge className={categoryBadgeClass(product.category, categories)}>
+              {labelFor(product.category)}
             </Badge>
             <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
             <p className="text-muted-foreground">{product.description}</p>

@@ -12,23 +12,23 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
-
-const NAV_LINKS = [
-  { to: "/", label: "Home" },
-  { to: "/shop", label: "Shop" },
-  { to: "/shop?category=oncology", label: "Oncology" },
-  { to: "/shop?category=rare_drugs", label: "Rare Drugs" },
-  { to: "/shop?category=weight_loss", label: "Weight Loss" },
-  { to: "/request-quote", label: "Request Quote" },
-  { to: "/b2b/signup", label: "Wholesale (B2B)" },
-];
 
 export function SiteHeader() {
   const { totalItems } = useCart();
   const { user, profile, signOut } = useAuth();
+  const { categories } = useCategories();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { to: "/", label: "Home" },
+    { to: "/shop", label: "Shop" },
+    ...categories.map((cat) => ({ to: `/shop?category=${cat.key}`, label: cat.label })),
+    { to: "/request-quote", label: "Request Quote" },
+    { to: "/b2b/signup", label: "Wholesale (B2B)" },
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -43,7 +43,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.label}
               to={link.to}
@@ -113,7 +113,7 @@ export function SiteHeader() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <nav className="mt-8 flex flex-col gap-1">
-                {NAV_LINKS.map((link) => (
+                {navLinks.map((link) => (
                   <Link
                     key={link.label}
                     to={link.to}

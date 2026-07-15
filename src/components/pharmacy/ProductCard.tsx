@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
-import { formatNaira, whatsappQuoteLink, CATEGORY_LABELS, CATEGORY_BADGE_CLASSES } from "@/lib/pharmacy";
+import { formatNaira, whatsappQuoteLink, categoryBadgeClass } from "@/lib/pharmacy";
+import { useCategories } from "@/hooks/useCategories";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -12,6 +13,7 @@ type Product = Tables<"products">;
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const { categories, labelFor } = useCategories();
   const hasPrice = product.price !== null;
 
   const handleAddToCart = () => {
@@ -41,8 +43,8 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
       <CardContent className="flex flex-1 flex-col gap-2 p-4">
-        <Badge className={CATEGORY_BADGE_CLASSES[product.category]}>
-          {CATEGORY_LABELS[product.category]}
+        <Badge className={categoryBadgeClass(product.category, categories)}>
+          {labelFor(product.category)}
         </Badge>
         <Link to={`/product/${product.slug}`}>
           <h3 className="line-clamp-2 font-semibold text-foreground hover:text-primary">

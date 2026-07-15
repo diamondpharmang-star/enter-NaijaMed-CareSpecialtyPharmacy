@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import { ShieldCheck, Truck, Lock, MapPin, Mail, MessageCircle } from "lucide-react";
 import { WHATSAPP_NUMBER, WHATSAPP_LINK } from "@/lib/pharmacy";
+import { useCategories } from "@/hooks/useCategories";
 
 const SUPPORT_EMAIL = "care@diamondpharmacare.ng";
 const STORE_ADDRESS = "116 Okota Road, Lagos";
 
 export function SiteFooter() {
+  const { categories } = useCategories();
+
   return (
     <footer className="border-t border-border bg-secondary/40">
       <div className="container grid grid-cols-1 gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
@@ -17,8 +20,8 @@ export function SiteFooter() {
             <span className="text-base font-bold text-foreground">Diamond Pharma Care</span>
           </div>
           <p className="mt-3 text-sm text-muted-foreground">
-            Nigeria's trusted source for oncology, rare disease, and weight-loss medication —
-            delivered safely nationwide.
+            Nigeria's trusted source for oncology, rare disease, diabetes, and other specialty
+            medication — delivered safely nationwide.
           </p>
           <a
             href={`mailto:${SUPPORT_EMAIL}`}
@@ -42,9 +45,13 @@ export function SiteFooter() {
         <div>
           <h4 className="text-sm font-semibold text-foreground">Shop</h4>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/shop?category=oncology" className="hover:text-foreground">Oncology</Link></li>
-            <li><Link to="/shop?category=rare_drugs" className="hover:text-foreground">Rare Drugs</Link></li>
-            <li><Link to="/shop?category=weight_loss" className="hover:text-foreground">Weight Loss</Link></li>
+            {categories.map((cat) => (
+              <li key={cat.key}>
+                <Link to={`/shop?category=${cat.key}`} className="hover:text-foreground">
+                  {cat.label}
+                </Link>
+              </li>
+            ))}
             <li><Link to="/request-quote" className="hover:text-foreground">Request unlisted medication</Link></li>
             <li><Link to="/b2b/signup" className="hover:text-foreground">Wholesale (B2B)</Link></li>
           </ul>

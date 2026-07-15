@@ -3,11 +3,13 @@ import { Minus, Plus, Trash2, ArrowRight, ShoppingBag } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
-import { formatNaira, CATEGORY_LABELS } from "@/lib/pharmacy";
+import { formatNaira } from "@/lib/pharmacy";
+import { useCategories } from "@/hooks/useCategories";
 
 const Cart = () => {
   const { items, updateQuantity, removeItem, totalAmount } = useCart();
   const navigate = useNavigate();
+  const { labelFor } = useCategories();
 
   if (items.length === 0) {
     return (
@@ -52,7 +54,7 @@ const Cart = () => {
                   >
                     {item.product_name}
                   </Link>
-                  <p className="text-xs text-muted-foreground">{CATEGORY_LABELS[item.category]}</p>
+                  <p className="text-xs text-muted-foreground">{labelFor(item.category)}</p>
                   <p className="mt-1 font-semibold text-primary">{formatNaira(item.unit_price)}</p>
                 </div>
                 <div className="flex items-center rounded-md border border-input">

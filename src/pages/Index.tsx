@@ -5,34 +5,18 @@ import { Button } from "@/components/ui/button";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
-import { WHATSAPP_LINK } from "@/lib/pharmacy";
+import { WHATSAPP_LINK, categoryBadgeClass } from "@/lib/pharmacy";
+import { useCategories } from "@/hooks/useCategories";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products">;
 
-const CATEGORY_CARDS = [
-  {
-    key: "oncology",
-    title: "Oncology",
-    description: "Targeted therapies and chemotherapy medication for cancer care.",
-    href: "/shop?category=oncology",
-    accent: "bg-category-oncology text-category-oncology-foreground",
-  },
-  {
-    key: "rare_drugs",
-    title: "Rare Drugs",
-    description: "Hard-to-find treatments for rare and orphan diseases.",
-    href: "/shop?category=rare_drugs",
-    accent: "bg-category-rare text-category-rare-foreground",
-  },
-  {
-    key: "weight_loss",
-    title: "Weight Loss",
-    description: "Clinically supported medication for weight management.",
-    href: "/shop?category=weight_loss",
-    accent: "bg-category-weightloss text-category-weightloss-foreground",
-  },
-];
+const CATEGORY_DESCRIPTIONS: Record<string, string> = {
+  oncology: "Targeted therapies and chemotherapy medication for cancer care.",
+  rare_drugs: "Hard-to-find treatments for rare and orphan diseases.",
+  diabetes: "Clinically supported medication for diabetes and metabolic health.",
+  others: "Additional specialty medication not covered by our main categories.",
+};
 
 const TRUST_POINTS = [
   { icon: ShieldCheck, title: "Verified medication", desc: "Sourced from licensed manufacturers and distributors." },
@@ -49,6 +33,7 @@ const QUOTE_STEPS = [
 
 const Index = () => {
   const [featured, setFeatured] = useState<Product[]>([]);
+  const { categories } = useCategories();
 
   useEffect(() => {
     supabase
@@ -70,7 +55,7 @@ const Index = () => {
             Diamond Pharma Care
           </h1>
           <p className="max-w-xl text-lg text-primary-foreground/85">
-            Specialists in oncology, rare disease, and weight-loss medication — delivered safely
+            Specialists in oncology, rare disease, and diabetes medication — delivered safely
             and discreetly across Nigeria, with secure online checkout.
           </p>
           <div className="flex flex-wrap gap-3">
@@ -108,16 +93,18 @@ const Index = () => {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {CATEGORY_CARDS.map((cat) => (
+          {categories.map((cat) => (
             <Link
               key={cat.key}
-              to={cat.href}
+              to={`/shop?category=${cat.key}`}
               className="group rounded-xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-elegant"
             >
-              <span className={`inline-flex rounded-lg px-3 py-1 text-sm font-semibold ${cat.accent}`}>
-                {cat.title}
+              <span className={`inline-flex rounded-lg px-3 py-1 text-sm font-semibold ${categoryBadgeClass(cat.key, categories)}`}>
+                {cat.label}
               </span>
-              <p className="mt-4 text-sm text-muted-foreground">{cat.description}</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                {CATEGORY_DESCRIPTIONS[cat.key] ?? "Specialty medication available in this category."}
+              </p>
               <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
                 Browse products <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </span>

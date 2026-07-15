@@ -44,7 +44,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Upload, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { formatNaira, slugify } from "@/lib/pharmacy";
+import { formatNaira, slugify, type Category } from "@/lib/pharmacy";
+import { useCategories } from "@/hooks/useCategories";
 import type { Tables as DbTables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -55,11 +56,6 @@ type Product = DbTables<"products">;
 const PAYMENT_STATUSES = ["pending", "paid", "failed"] as const;
 const ORDER_STATUSES = ["processing", "shipped", "delivered", "cancelled"] as const;
 const QUOTE_STATUSES = ["new", "contacted", "quoted", "closed"] as const;
-const PRODUCT_CATEGORIES = [
-  { value: "oncology", label: "Oncology" },
-  { value: "rare_drugs", label: "Rare Drugs" },
-  { value: "weight_loss", label: "Weight Loss" },
-] as const;
 const PRODUCT_IMAGE_BUCKET = "product-images";
 const MAX_IMAGE_SIZE_MB = 10;
 const ALLOWED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif"];
@@ -358,34 +354,83 @@ function DeleteProductButton({
   );
 }
 
-function AddProductDialog({ onCreated }: { onCreated: (product: Product) => void }) {
+function AddProductDialog({
+  categories,
+  onCreated,
+}: {
+  categories: Category[];
+  onCreated: (product: Product) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: "",
-    category: "oncology" as (typeof PRODUCT_CATEGORIES)[number]["value"],
+    category: "",
     description: "",
     price: "",
     b2b_price: "",
     stock_quantity: "0",
   });
 
+  useEffect(() => {
+    if (categories.length > 0 && !form.category) {
+      setForm((prev) => ({ ...prev, category: categories[0].key }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories]);
+
   const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
-  const resetForm = () =>
+  const clearPhoto = () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (photoInputRef.current) photoInputRef.current.value = "";
+  };
+
+  const resetForm = () => {
     setForm({
       name: "",
-      category: "oncology",
+      category: categories[0]?.key ?? "",
       description: "",
       price: "",
       b2b_price: "",
       stock_quantity: "0",
     });
+    clearPhoto();
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const maxSizeBytes = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      toast.error(`Image is too large. Maximum size is ${MAX_IMAGE_SIZE_MB}MB.`);
+      return;
+    }
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!ext || !ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
+      toast.error("Unsupported file type. Please upload a JPG, PNG, WEBP, or GIF image.");
+      return;
+    }
+
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
 
   const handleCreate = async () => {
     const trimmedName = form.name.trim();
     if (!trimmedName) {
       toast.error("Enter a medication name.");
+      return;
+    }
+    if (!form.category) {
+      toast.error("Select a category.");
       return;
     }
 
@@ -403,6 +448,27 @@ function AddProductDialog({ onCreated }: { onCreated: (product: Product) => void
     }
 
     setIsSaving(true);
+
+    let image_url: string | null = null;
+    if (photoFile) {
+      setIsUploading(true);
+      const ext = photoFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `products/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from(PRODUCT_IMAGE_BUCKET)
+        .upload(path, photoFile, { contentType: photoFile.type, upsert: false });
+      setIsUploading(false);
+
+      if (uploadError) {
+        setIsSaving(false);
+        toast.error("Failed to upload photo. Please try again.");
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
+      image_url = publicUrlData.publicUrl;
+    }
+
     const baseSlug = slugify(trimmedName);
     const slug = `${baseSlug}-${crypto.randomUUID().slice(0, 6)}`;
 
@@ -416,6 +482,7 @@ function AddProductDialog({ onCreated }: { onCreated: (product: Product) => void
         price: parsedPrice,
         b2b_price: parsedB2bPrice,
         stock_quantity: parsedStock,
+        image_url,
       })
       .select()
       .single();
@@ -434,7 +501,13 @@ function AddProductDialog({ onCreated }: { onCreated: (product: Product) => void
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) resetForm();
+      }}
+    >
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Add product
@@ -445,6 +518,38 @@ function AddProductDialog({ onCreated }: { onCreated: (product: Product) => void
           <DialogTitle>Add new medication</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Medication photo</Label>
+            {photoPreview ? (
+              <div className="relative h-32 w-32 overflow-hidden rounded-lg border border-border">
+                <img src={photoPreview} alt="Selected medication" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={clearPhoto}
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-foreground/70 text-background"
+                  aria-label="Remove photo"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="flex h-32 w-32 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-input text-muted-foreground hover:border-primary hover:text-primary"
+              >
+                <Upload className="h-5 w-5" />
+                <span className="text-xs">Upload photo</span>
+              </button>
+            )}
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="new_product_name">Medication name</Label>
             <Input
@@ -458,11 +563,11 @@ function AddProductDialog({ onCreated }: { onCreated: (product: Product) => void
             <Label>Category</Label>
             <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {PRODUCT_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.key} value={cat.key}>
                     {cat.label}
                   </SelectItem>
                 ))}
@@ -519,11 +624,244 @@ function AddProductDialog({ onCreated }: { onCreated: (product: Product) => void
           </Button>
           <Button onClick={handleCreate} disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create medication
+            {isUploading ? "Uploading photo..." : "Create medication"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ProductCategorySelect({
+  product,
+  categories,
+  onUpdated,
+}: {
+  product: Product;
+  categories: Category[];
+  onUpdated: (productId: string, updates: Partial<Product>) => void;
+}) {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleChange = async (value: string) => {
+    setIsSaving(true);
+    const { error } = await supabase.from("products").update({ category: value }).eq("id", product.id);
+    setIsSaving(false);
+
+    if (error) {
+      toast.error("Failed to update category.");
+      return;
+    }
+
+    onUpdated(product.id, { category: value });
+    toast.success("Category updated.");
+  };
+
+  return (
+    <Select value={product.category} onValueChange={handleChange} disabled={isSaving}>
+      <SelectTrigger className="w-36">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {categories.map((cat) => (
+          <SelectItem key={cat.key} value={cat.key}>
+            {cat.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function AddCategoryForm({ onCreated }: { onCreated: (category: Category) => void }) {
+  const [label, setLabel] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleAdd = async () => {
+    const trimmed = label.trim();
+    if (!trimmed) {
+      toast.error("Enter a category name.");
+      return;
+    }
+
+    const key = slugify(trimmed).replace(/-/g, "_");
+    if (!key) {
+      toast.error("Enter a valid category name.");
+      return;
+    }
+
+    setIsSaving(true);
+    const { data: maxRow } = await supabase
+      .from("categories")
+      .select("sort_order")
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextSortOrder = (maxRow?.sort_order ?? 0) + 1;
+
+    const { data, error } = await supabase
+      .from("categories")
+      .insert({ key, label: trimmed, sort_order: nextSortOrder })
+      .select()
+      .single();
+    setIsSaving(false);
+
+    if (error || !data) {
+      toast.error(
+        error?.code === "23505" ? "A category with this name already exists." : "Failed to add category."
+      );
+      return;
+    }
+
+    onCreated(data);
+    toast.success(`${trimmed} category added.`);
+    setLabel("");
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        placeholder="New category name"
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        className="w-48"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleAdd();
+        }}
+      />
+      <Button variant="outline" size="sm" disabled={isSaving} onClick={handleAdd}>
+        {isSaving ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Plus className="mr-2 h-3.5 w-3.5" />}
+        Add category
+      </Button>
+    </div>
+  );
+}
+
+function CategoryLabelEditCell({
+  category,
+  onUpdated,
+}: {
+  category: Category;
+  onUpdated: (key: string, updates: Partial<Category>) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [label, setLabel] = useState(category.label);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    const trimmed = label.trim();
+    if (!trimmed) {
+      toast.error("Category name cannot be empty.");
+      return;
+    }
+    if (trimmed === category.label) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSaving(true);
+    const { error } = await supabase.from("categories").update({ label: trimmed }).eq("key", category.key);
+    setIsSaving(false);
+
+    if (error) {
+      toast.error("Failed to update category.");
+      return;
+    }
+
+    onUpdated(category.key, { label: trimmed });
+    toast.success("Category updated.");
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setLabel(category.label);
+    setIsEditing(false);
+  };
+
+  if (!isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{category.label}</span>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsEditing(true)}>
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        className="w-40"
+        autoFocus
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSave();
+          if (e.key === "Escape") handleCancel();
+        }}
+      />
+      <Button variant="outline" size="icon" className="h-9 w-9" disabled={isSaving} onClick={handleSave}>
+        {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+      </Button>
+      <Button variant="ghost" size="icon" className="h-9 w-9" disabled={isSaving} onClick={handleCancel}>
+        <X className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+function DeleteCategoryButton({
+  category,
+  onDeleted,
+}: {
+  category: Category;
+  onDeleted: (key: string) => void;
+}) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const { error } = await supabase.from("categories").delete().eq("key", category.key);
+    setIsDeleting(false);
+
+    if (error) {
+      toast.error("Failed to delete category.");
+      return;
+    }
+
+    onDeleted(category.key);
+    toast.success(`${category.label} category deleted. Its products moved to "Others".`);
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete {category.label}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Any medications currently in this category will be automatically moved to "Others" (if
+            it exists) or unassigned. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -533,6 +871,7 @@ const AdminOrders = () => {
   const [quoteRequests, setQuoteRequests] = useState<MedicationQuoteRequest[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { categories, refetch: refetchCategories } = useCategories();
 
   const fetchData = () => {
     Promise.all([
@@ -590,6 +929,19 @@ const AdminOrders = () => {
     setProducts((prev) => prev.filter((p) => p.id !== productId));
   };
 
+  const handleCategoryCreated = () => {
+    refetchCategories();
+  };
+
+  const handleCategoryUpdated = () => {
+    refetchCategories();
+  };
+
+  const handleCategoryDeleted = () => {
+    refetchCategories();
+    fetchData();
+  };
+
   if (!authLoading && profile && profile.role !== "admin") {
     return <Navigate to="/" replace />;
   }
@@ -607,6 +959,7 @@ const AdminOrders = () => {
               <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
               <TabsTrigger value="quotes">Quote Requests ({quoteRequests.length})</TabsTrigger>
               <TabsTrigger value="products">Manage Products ({products.length})</TabsTrigger>
+              <TabsTrigger value="categories">Categories ({categories.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="orders">
@@ -759,7 +1112,7 @@ const AdminOrders = () => {
                   Add, edit, or remove medications, upload photos, and set retail / wholesale prices.
                   Leave a price field blank to show "Price on request" on the storefront.
                 </p>
-                <AddProductDialog onCreated={handleProductCreated} />
+                <AddProductDialog categories={categories} onCreated={handleProductCreated} />
               </div>
               {products.length === 0 ? (
                 <p className="text-muted-foreground">No products yet.</p>
@@ -787,9 +1140,11 @@ const AdminOrders = () => {
                             </p>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="capitalize">
-                              {product.category.replace("_", " ")}
-                            </Badge>
+                            <ProductCategorySelect
+                              product={product}
+                              categories={categories}
+                              onUpdated={handleProductUpdated}
+                            />
                           </TableCell>
                           <TableCell>
                             <ProductImageUploadCell
@@ -802,6 +1157,45 @@ const AdminOrders = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <DeleteProductButton product={product} onDeleted={handleProductDeleted} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="categories">
+              <div className="mt-6 mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Add, rename, or remove drug categories shown across the storefront.
+                </p>
+                <AddCategoryForm onCreated={handleCategoryCreated} />
+              </div>
+              {categories.length === 0 ? (
+                <p className="text-muted-foreground">No categories yet.</p>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Category</TableHead>
+                        <TableHead className="text-right">Delete</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {categories.map((category) => (
+                        <TableRow key={category.key}>
+                          <TableCell>
+                            <CategoryLabelEditCell category={category} onUpdated={handleCategoryUpdated} />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {category.key === "others" ? (
+                              <span className="text-xs text-muted-foreground">Protected</span>
+                            ) : (
+                              <DeleteCategoryButton category={category} onDeleted={handleCategoryDeleted} />
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}

@@ -6,13 +6,11 @@ import { ProductCard } from "@/components/pharmacy/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { CATEGORY_LABELS } from "@/lib/pharmacy";
+import { useCategories } from "@/hooks/useCategories";
 import type { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 
 type Product = Tables<"products">;
-
-const CATEGORIES = ["all", "oncology", "rare_drugs", "weight_loss"] as const;
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +18,7 @@ const Shop = () => {
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { categories } = useCategories();
 
   useEffect(() => {
     setIsLoading(true);
@@ -52,7 +51,7 @@ const Shop = () => {
         <div className="container py-10">
           <h1 className="text-3xl font-bold text-foreground">Shop Medication</h1>
           <p className="mt-2 text-muted-foreground">
-            Browse our specialty catalog of oncology, rare disease, and weight-loss medication.
+            Browse our specialty catalog of oncology, rare disease, diabetes, and other medication.
           </p>
         </div>
       </section>
@@ -60,15 +59,23 @@ const Shop = () => {
       <section className="container py-10">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
+            <Button
+              variant={activeCategory === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCategory("all")}
+              className={cn(activeCategory === "all" && "shadow-elegant")}
+            >
+              All Products
+            </Button>
+            {categories.map((cat) => (
               <Button
-                key={cat}
-                variant={activeCategory === cat ? "default" : "outline"}
+                key={cat.key}
+                variant={activeCategory === cat.key ? "default" : "outline"}
                 size="sm"
-                onClick={() => setCategory(cat)}
-                className={cn(activeCategory === cat && "shadow-elegant")}
+                onClick={() => setCategory(cat.key)}
+                className={cn(activeCategory === cat.key && "shadow-elegant")}
               >
-                {cat === "all" ? "All Products" : CATEGORY_LABELS[cat]}
+                {cat.label}
               </Button>
             ))}
           </div>

@@ -19,7 +19,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, Upload, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira } from "@/lib/pharmacy";
@@ -122,6 +123,84 @@ function ProductImageUploadCell({
   );
 }
 
+function ProductPriceEditCell({
+  product,
+  onUpdated,
+}: {
+  product: Product;
+  onUpdated: (productId: string, updates: Partial<Product>) => void;
+}) {
+  const [price, setPrice] = useState(product.price !== null ? String(product.price) : "");
+  const [b2bPrice, setB2bPrice] = useState(product.b2b_price !== null ? String(product.b2b_price) : "");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const isDirty =
+    price !== (product.price !== null ? String(product.price) : "") ||
+    b2bPrice !== (product.b2b_price !== null ? String(product.b2b_price) : "");
+
+  const handleSave = async () => {
+    const parsedPrice = price.trim() === "" ? null : Number(price);
+    const parsedB2bPrice = b2bPrice.trim() === "" ? null : Number(b2bPrice);
+
+    if (parsedPrice !== null && (Number.isNaN(parsedPrice) || parsedPrice < 0)) {
+      toast.error("Enter a valid retail price.");
+      return;
+    }
+    if (parsedB2bPrice !== null && (Number.isNaN(parsedB2bPrice) || parsedB2bPrice < 0)) {
+      toast.error("Enter a valid wholesale price.");
+      return;
+    }
+
+    setIsSaving(true);
+    const { error } = await supabase
+      .from("products")
+      .update({ price: parsedPrice, b2b_price: parsedB2bPrice })
+      .eq("id", product.id);
+    setIsSaving(false);
+
+    if (error) {
+      toast.error("Failed to update price.");
+      return;
+    }
+
+    onUpdated(product.id, { price: parsedPrice, b2b_price: parsedB2bPrice });
+    toast.success(`Price updated for ${product.name}`);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="space-y-1">
+        <Input
+          type="number"
+          min="0"
+          placeholder="Retail price"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          className="w-32"
+        />
+      </div>
+      <div className="space-y-1">
+        <Input
+          type="number"
+          min="0"
+          placeholder="Wholesale price"
+          value={b2bPrice}
+          onChange={(e) => setB2bPrice(e.target.value)}
+          className="w-32"
+        />
+      </div>
+      <Button variant="outline" size="sm" disabled={!isDirty || isSaving} onClick={handleSave}>
+        {isSaving ? (
+          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Check className="mr-2 h-3.5 w-3.5" />
+        )}
+        Save
+      </Button>
+    </div>
+  );
+}
+
 const AdminOrders = () => {
   const { profile, isLoading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -173,6 +252,10 @@ const AdminOrders = () => {
     setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, image_url: imageUrl } : p)));
   };
 
+  const handleProductUpdated = (productId: string, updates: Partial<Product>) => {
+    setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, ...updates } : p)));
+  };
+
   if (!authLoading && profile && profile.role !== "admin") {
     return <Navigate to="/" replace />;
   }
@@ -189,7 +272,7 @@ const AdminOrders = () => {
             <TabsList>
               <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
               <TabsTrigger value="quotes">Quote Requests ({quoteRequests.length})</TabsTrigger>
-              <TabsTrigger value="products">Product Images ({products.length})</TabsTrigger>
+              <TabsTrigger value="products">Manage Products ({products.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="orders">
@@ -338,8 +421,8 @@ const AdminOrders = () => {
 
             <TabsContent value="products">
               <p className="mt-6 mb-4 text-sm text-muted-foreground">
-                Upload a photo for each medication one by one. Uploaded images replace the current
-                photo immediately on the storefront.
+                Upload a photo and set retail / wholesale prices for each medication one by one.
+                Leave a price field blank to show "Price on request" on the storefront.
               </p>
               {products.length === 0 ? (
                 <p className="text-muted-foreground">No products yet.</p>
@@ -351,12 +434,20 @@ const AdminOrders = () => {
                         <TableHead>Medication</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Photo</TableHead>
+                        <TableHead>Price (₦)</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {products.map((product) => (
                         <TableRow key={product.id}>
-                          <TableCell className="font-medium">{product.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {product.name}
+                            <p className="text-xs text-muted-foreground">
+                              {product.price !== null
+                                ? formatNaira(Number(product.price))
+                                : "Price on request"}
+                            </p>
+                          </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="capitalize">
                               {product.category.replace("_", " ")}
@@ -367,6 +458,9 @@ const AdminOrders = () => {
                               product={product}
                               onUploaded={handleProductImageUploaded}
                             />
+                          </TableCell>
+                          <TableCell>
+                            <ProductPriceEditCell product={product} onUpdated={handleProductUpdated} />
                           </TableCell>
                         </TableRow>
                       ))}

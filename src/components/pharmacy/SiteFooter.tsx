@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck, Truck, Lock, Phone } from "lucide-react";
+import { ShieldCheck, Truck, Lock, Phone, Mail } from "lucide-react";
+
+const SUPPORT_EMAIL = "care@diamondpharmacare.ng";
 
 export function SiteFooter() {
   return (
@@ -16,6 +18,12 @@ export function SiteFooter() {
             Nigeria's trusted source for oncology, rare disease, and weight-loss medication —
             delivered safely nationwide.
           </p>
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="mt-3 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <Mail className="h-4 w-4 text-accent" /> {SUPPORT_EMAIL}
+          </a>
         </div>
 
         <div>

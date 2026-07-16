@@ -30,7 +30,10 @@ const Shop = () => {
     if (activeCategory !== "all") {
       query = query.eq("category", activeCategory);
     }
-    query.order("created_at", { ascending: false }).then(({ data }) => {
+    query
+      .order("price", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
       setProducts(data ?? []);
       setIsLoading(false);
     });

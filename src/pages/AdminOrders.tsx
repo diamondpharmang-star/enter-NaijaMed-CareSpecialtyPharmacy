@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Upload, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -220,6 +221,37 @@ function ProductPriceEditCell({
         Save
       </Button>
     </div>
+  );
+}
+
+function ProductBestSellerToggle({
+  product,
+  onUpdated,
+}: {
+  product: Product;
+  onUpdated: (productId: string, updates: Partial<Product>) => void;
+}) {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleToggle = async (checked: boolean) => {
+    setIsSaving(true);
+    const { error } = await supabase
+      .from("products")
+      .update({ is_best_seller: checked })
+      .eq("id", product.id);
+    setIsSaving(false);
+
+    if (error) {
+      toast.error("Failed to update best seller status.");
+      return;
+    }
+
+    onUpdated(product.id, { is_best_seller: checked });
+    toast.success(checked ? `${product.name} marked as best seller.` : `${product.name} removed from best sellers.`);
+  };
+
+  return (
+    <Switch checked={product.is_best_seller} onCheckedChange={handleToggle} disabled={isSaving} />
   );
 }
 
@@ -1129,6 +1161,7 @@ const AdminOrders = () => {
                         <TableHead>Category</TableHead>
                         <TableHead>Photo</TableHead>
                         <TableHead>Price (₦)</TableHead>
+                        <TableHead>Best Seller</TableHead>
                         <TableHead className="text-right">Delete</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1158,6 +1191,9 @@ const AdminOrders = () => {
                           </TableCell>
                           <TableCell>
                             <ProductPriceEditCell product={product} onUpdated={handleProductUpdated} />
+                          </TableCell>
+                          <TableCell>
+                            <ProductBestSellerToggle product={product} onUpdated={handleProductUpdated} />
                           </TableCell>
                           <TableCell className="text-right">
                             <DeleteProductButton product={product} onDeleted={handleProductDeleted} />

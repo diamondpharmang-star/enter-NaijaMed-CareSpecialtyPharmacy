@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Menu, User as UserIcon, LogOut, Package, ShieldCheck, Search, X } from "lucide-react";
+import { ShoppingCart, Menu, User as UserIcon, LogOut, Package, ShieldCheck, Search, X, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,10 +25,8 @@ export function SiteHeader() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const navLinks = [
-    { to: "/", label: "Home" },
-    { to: "/shop", label: "Shop" },
-    ...categories.map((cat) => ({ to: `/shop?category=${cat.key}`, label: cat.label })),
+  const trailingNavLinks = [
+    { to: "/best-sellers", label: "Best Sellers" },
     { to: "/request-quote", label: "Request Quote" },
     { to: "/b2b/signup", label: "Wholesale (B2B)" },
   ];
@@ -53,7 +51,34 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 xl:flex">
-          {navLinks.map((link) => (
+          <Link
+            to="/"
+            className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            Home
+          </Link>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-auto whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                Shop <ChevronDown className="ml-1 h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => navigate("/shop")}>All Products</DropdownMenuItem>
+              {categories.length > 0 && <DropdownMenuSeparator />}
+              {categories.map((cat) => (
+                <DropdownMenuItem key={cat.key} onClick={() => navigate(`/shop?category=${cat.key}`)}>
+                  {cat.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {trailingNavLinks.map((link) => (
             <Link
               key={link.label}
               to={link.to}
@@ -146,7 +171,37 @@ export function SiteHeader() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <nav className="mt-8 flex flex-col gap-1">
-                {navLinks.map((link) => (
+                <Link
+                  to="/"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                >
+                  Home
+                </Link>
+
+                <div className="mt-2 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Shop
+                </div>
+                <Link
+                  to="/shop"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                >
+                  All Products
+                </Link>
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.key}
+                    to={`/shop?category=${cat.key}`}
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-md px-3 py-2.5 pl-6 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    {cat.label}
+                  </Link>
+                ))}
+
+                <div className="mt-2 border-t border-border pt-2" />
+                {trailingNavLinks.map((link) => (
                   <Link
                     key={link.label}
                     to={link.to}

@@ -149,7 +149,7 @@ const ProductDetail = () => {
             ) : (
               <Button asChild size="lg" variant="secondary" className="mt-2">
                 <a href={whatsappQuoteLink(product.name)} target="_blank" rel="noreferrer">
-                  <MessageCircle className="mr-2 h-4 w-4" /> Request price quote on WhatsApp
+                  <MessageCircle className="mr-2 h-4 w-4" /> Buy on WhatsApp
                 </a>
               </Button>
             )}

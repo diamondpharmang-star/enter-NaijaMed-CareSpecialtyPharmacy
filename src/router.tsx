@@ -10,6 +10,8 @@ import B2BSignup from "./pages/B2BSignup";
 import AccountOrders from "./pages/AccountOrders";
 import AdminOrders from "./pages/AdminOrders";
 import RequestQuote from "./pages/RequestQuote";
+import BestSellers from "./pages/BestSellers";
+import ReturnRefundPolicy from "./pages/ReturnRefundPolicy";
 import NotFound from "./pages/NotFound";
 
 export const routers = [
@@ -72,6 +74,16 @@ export const routers = [
     path: "/request-quote",
     name: "request-quote",
     element: <RequestQuote />,
+  },
+  {
+    path: "/best-sellers",
+    name: "best-sellers",
+    element: <BestSellers />,
+  },
+  {
+    path: "/return-refund-policy",
+    name: "return-refund-policy",
+    element: <ReturnRefundPolicy />,
   },
   /* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */
   {

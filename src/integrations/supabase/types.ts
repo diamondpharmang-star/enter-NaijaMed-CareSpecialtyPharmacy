@@ -3405,6 +3405,27 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          created_at: string
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       medication_quote_requests: {
         Row: {
           created_at: string
@@ -3535,6 +3556,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_best_seller: boolean
           name: string
           price: number | null
           slug: string
@@ -3542,12 +3564,13 @@ export type Database = {
         }
         Insert: {
           b2b_price?: number | null
-          category: string
+          category?: string
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_best_seller?: boolean
           name: string
           price?: number | null
           slug: string
@@ -3561,12 +3584,20 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_best_seller?: boolean
           name?: string
           price?: number | null
           slug?: string
           stock_quantity?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_category_fkey"
+            columns: ["category"]
+            referencedRelation: "categories"
+            referencedColumns: ["key"]
+          },
+        ]
       }
       profiles: {
         Row: {

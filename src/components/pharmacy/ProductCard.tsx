@@ -70,7 +70,7 @@ export function ProductCard({ product }: { product: Product }) {
         ) : (
           <Button asChild className="w-full" variant="secondary">
             <a href={whatsappQuoteLink(product.name)} target="_blank" rel="noreferrer">
-              <MessageCircle className="mr-2 h-4 w-4" /> Request quote on WhatsApp
+              <MessageCircle className="mr-2 h-4 w-4" /> Buy on WhatsApp
             </a>
           </Button>
         )}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira } from "@/lib/pharmacy";
-import { NIGERIAN_STATES } from "@/lib/nigeria";
+import { NIGERIAN_STATES, BANK_TRANSFER_DETAILS } from "@/lib/nigeria";
 import { toast } from "sonner";
 
 const Checkout = () => {
@@ -42,6 +42,11 @@ const Checkout = () => {
 
   const isFormValid =
     form.customer_name && form.email && form.phone && form.delivery_address && form.city && form.state;
+
+  const copyAccountNumber = () => {
+    navigator.clipboard.writeText(BANK_TRANSFER_DETAILS.accountNumber);
+    toast.success("Account number copied");
+  };
 
   const handlePlaceOrder = async () => {
     if (!isFormValid || items.length === 0) return;
@@ -210,6 +215,35 @@ const Checkout = () => {
                   </div>
                 </label>
               </RadioGroup>
+
+              {paymentMethod === "bank_transfer" && (
+                <div className="mt-4 rounded-lg border border-primary/30 bg-secondary/30 p-4">
+                  <h3 className="font-semibold text-foreground">Bank transfer details</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Transfer the exact order total to the account below. Your order will be
+                    processed once payment is confirmed.
+                  </p>
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Bank</span>
+                      <span className="font-medium text-foreground">{BANK_TRANSFER_DETAILS.bankName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Account name</span>
+                      <span className="font-medium text-foreground">{BANK_TRANSFER_DETAILS.accountName}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Account number</span>
+                      <span className="flex items-center gap-2 font-medium text-foreground">
+                        {BANK_TRANSFER_DETAILS.accountNumber}
+                        <button type="button" onClick={copyAccountNumber} aria-label="Copy account number">
+                          <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

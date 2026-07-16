@@ -52,6 +52,7 @@ export function SiteFooter() {
                 </Link>
               </li>
             ))}
+            <li><Link to="/best-sellers" className="hover:text-foreground">Best Sellers</Link></li>
             <li><Link to="/request-quote" className="hover:text-foreground">Request unlisted medication</Link></li>
             <li><Link to="/b2b/signup" className="hover:text-foreground">Wholesale (B2B)</Link></li>
           </ul>
@@ -63,6 +64,7 @@ export function SiteFooter() {
             <li><Link to="/login" className="hover:text-foreground">Sign in</Link></li>
             <li><Link to="/signup" className="hover:text-foreground">Create account</Link></li>
             <li><Link to="/account/orders" className="hover:text-foreground">Track order</Link></li>
+            <li><Link to="/return-refund-policy" className="hover:text-foreground">Return &amp; Refund Policy</Link></li>
           </ul>
         </div>
 

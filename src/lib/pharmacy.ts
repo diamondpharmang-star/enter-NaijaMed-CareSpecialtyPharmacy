@@ -6,7 +6,7 @@ export const WHATSAPP_NUMBER = "+2347042574473";
 export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}`;
 
 export function whatsappQuoteLink(productName: string): string {
-  const message = `Hello Diamond Pharma Care, I'd like a price quote for: ${productName}`;
+  const message = `Hello Diamond Pharma Care, I'd like to buy: ${productName}`;
   return `${WHATSAPP_LINK}?text=${encodeURIComponent(message)}`;
 }
 

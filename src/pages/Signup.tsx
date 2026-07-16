@@ -11,12 +11,18 @@ import { toast } from "sonner";
 const Signup = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [form, setForm] = useState({ full_name: "", email: "", phone: "", password: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", phone: "", password: "", confirm_password: "" });
 
   const updateField = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (form.password !== form.confirm_password) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
     setIsSubmitting(true);
     const { error } = await supabase.auth.signUp({
       email: form.email,
@@ -86,6 +92,17 @@ const Signup = () => {
                 minLength={6}
                 value={form.password}
                 onChange={(e) => updateField("password", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="confirm_password">Confirm password</Label>
+              <Input
+                id="confirm_password"
+                type="password"
+                required
+                minLength={6}
+                value={form.confirm_password}
+                onChange={(e) => updateField("confirm_password", e.target.value)}
               />
             </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>

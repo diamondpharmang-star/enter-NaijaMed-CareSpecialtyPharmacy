@@ -7,7 +7,7 @@ export const NIGERIAN_STATES = [
 ];
 
 export const BANK_TRANSFER_DETAILS = {
-  bankName: "Zenith Bank Plc",
-  accountName: "Diamond Pharma Care Ltd",
-  accountNumber: "1234567890",
+  bankName: "Moniepoint MFB",
+  accountName: "Diamond Global Alliance Services Ltd",
+  accountNumber: "4002437816",
 };

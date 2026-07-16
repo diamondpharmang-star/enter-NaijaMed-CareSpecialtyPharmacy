@@ -1,0 +1,30 @@
+alter table public.products add column if not exists is_best_seller boolean not null default false;
+
+update public.products set is_best_seller = true where slug in (
+  'mounjaro-kwikpen-5mg-uk',
+  'mounjaro-kwikpen-7-5mg-uk',
+  'mounjaro-kwikpen-10mg-uk',
+  'mounjaro-kwikpen-12-5mg-uk',
+  'mounjaro-kwikpen-15mg-uk',
+  'mounjaro-kwikpen-5mg-italy',
+  'mounjaro-kwikpen-7-5mg-italy',
+  'mounjaro-kwikpen-10mg-italy',
+  'mounjaro-kwikpen-12-5mg-italy',
+  'mounjaro-kwikpen-15mg-italy',
+  'mounjaro-5mg-4pen-pack',
+  'mounjaro-7-5mg-4pen-pack',
+  'mounjaro-10mg-4pen-pack',
+  'mounjaro-12-5mg-4pen-pack',
+  'mounjaro-15mg-4pen-pack',
+  'ozempic-semaglutide-1mg-pen-egypt',
+  'ozempic-semaglutide-1mg-pen-uk',
+  'ozempic-semaglutide-2mg-pen',
+  'rybelsus-oral-semaglutide-14mg-10tabs',
+  'rybelsus-oral-semaglutide-7mg-10tabs',
+  'aldara-imiquimod-cream',
+  'darzalex-faspro-daratumumab-1800mg',
+  'actilyse-alteplase-50mg-2vial-pack',
+  'botox-onabotulinumtoxina-100units',
+  'zytiga-abiraterone-250mg-tablets',
+  'lynparza-olaparib-150mg-56tabs'
+);

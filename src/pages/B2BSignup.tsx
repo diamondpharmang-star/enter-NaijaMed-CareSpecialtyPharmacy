@@ -18,6 +18,7 @@ const B2BSignup = () => {
     email: "",
     phone: "",
     password: "",
+    confirm_password: "",
     license_number: "",
     products_needed: "",
     estimated_quantity: "",
@@ -28,6 +29,12 @@ const B2BSignup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (form.password !== form.confirm_password) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -147,6 +154,17 @@ const B2BSignup = () => {
                   minLength={6}
                   value={form.password}
                   onChange={(e) => updateField("password", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm_password">Confirm password</Label>
+                <Input
+                  id="confirm_password"
+                  type="password"
+                  required
+                  minLength={6}
+                  value={form.confirm_password}
+                  onChange={(e) => updateField("confirm_password", e.target.value)}
                 />
               </div>
             </div>

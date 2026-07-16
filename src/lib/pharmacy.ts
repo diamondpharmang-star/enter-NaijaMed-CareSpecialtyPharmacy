@@ -2,10 +2,8 @@ export function formatNaira(amount: number): string {
   return `₦${Math.round(amount).toLocaleString("en-NG")}`;
 }
 
-export const WHATSAPP_NUMBER = "08025525894";
-// wa.me requires international format (no leading 0); convert Nigerian local format to +234.
-const WHATSAPP_INTERNATIONAL_DIGITS = WHATSAPP_NUMBER.replace(/^0/, "234");
-export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_INTERNATIONAL_DIGITS}`;
+export const WHATSAPP_NUMBER = "+2348025525894";
+export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}`;
 
 export function whatsappQuoteLink(productName: string): string {
   const message = `Hello Diamond Pharma Care, I'd like to buy: ${productName}`;

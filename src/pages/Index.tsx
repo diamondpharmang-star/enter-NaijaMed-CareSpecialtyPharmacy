@@ -40,6 +40,7 @@ const Index = () => {
       .from("products")
       .select("*")
       .eq("is_active", true)
+      .order("price", { ascending: true, nullsFirst: false })
       .limit(4)
       .then(({ data }) => setFeatured(data ?? []));
   }, []);

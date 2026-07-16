@@ -69,6 +69,17 @@ Deno.serve(async (req: Request) => {
       console.error("Order update error:", error);
     }
 
+    if (isSuccess && updatedOrder) {
+      fetch(`${supabaseUrl}/functions/v1/send-order-notification`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ type: "new_order", order_id: updatedOrder.id }),
+      }).catch((e) => console.error("Failed to send order notification:", e));
+    }
+
     return new Response(
       JSON.stringify({ payment_status: isSuccess ? "paid" : "failed", order: updatedOrder }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

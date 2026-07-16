@@ -111,6 +111,10 @@ const Checkout = () => {
 
         if (itemsError) throw new Error("Failed to save order items.");
 
+        supabase.functions
+          .invoke("send-order-notification", { body: { type: "new_order", order_id: order.id } })
+          .catch((e) => console.error("Failed to send order notification:", e));
+
         clearCart();
         navigate(`/order-confirmation?order_id=${order.id}`);
       }

@@ -937,6 +937,10 @@ const AdminOrders = () => {
     }
     toast.success("Order updated.");
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...updates } : o)));
+
+    supabase.functions
+      .invoke("send-order-notification", { body: { type: "status_update", order_id: id } })
+      .catch((e) => console.error("Failed to send status update notification:", e));
   };
 
   const updateQuoteRequest = async (id: string, updates: Partial<MedicationQuoteRequest>) => {

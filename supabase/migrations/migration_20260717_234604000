@@ -1,0 +1,20 @@
+-- Allow guest (user_id IS NULL) orders to be read back after insert and viewed
+-- on the order confirmation page via their UUID, in addition to owner/admin access.
+DROP POLICY IF EXISTS "Users view own orders or admin views all" ON public.orders;
+CREATE POLICY "Users view own orders or admin views all"
+ON public.orders
+FOR SELECT
+USING (auth.uid() = user_id OR user_id IS NULL OR is_admin());
+
+DROP POLICY IF EXISTS "Users view own order items or admin views all" ON public.order_items;
+CREATE POLICY "Users view own order items or admin views all"
+ON public.order_items
+FOR SELECT
+USING (
+  is_admin()
+  OR EXISTS (
+    SELECT 1 FROM public.orders o
+    WHERE o.id = order_items.order_id
+      AND (o.user_id = auth.uid() OR o.user_id IS NULL)
+  )
+);

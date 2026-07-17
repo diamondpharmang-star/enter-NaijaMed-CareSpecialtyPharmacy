@@ -110,8 +110,8 @@ const OrderConfirmation = () => {
             <div className="mt-6 rounded-lg border border-primary/30 bg-secondary/30 p-4 text-left">
               <h3 className="font-semibold text-foreground">Complete your bank transfer</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Please transfer the exact order total to the account below, then send your order
-                reference to our support line. Your order will be processed once payment is confirmed.
+                Please transfer the exact order total to the account below. Your order will be
+                processed once payment is confirmed.
               </p>
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -132,6 +132,13 @@ const OrderConfirmation = () => {
                   </span>
                 </div>
               </div>
+              <p className="mt-4 rounded-lg bg-secondary/50 p-3 text-xs text-muted-foreground">
+                Important: quote your order confirmation number{" "}
+                <span className="font-semibold text-foreground">
+                  {order.id.slice(0, 8).toUpperCase()}
+                </span>{" "}
+                in the transfer narration (description) so we can match your payment to this order.
+              </p>
             </div>
           )}
 

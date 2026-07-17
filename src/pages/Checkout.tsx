@@ -260,6 +260,14 @@ const Checkout = () => {
                       </span>
                     </div>
                   </div>
+                  <p className="mt-4 flex items-start gap-2 rounded-lg bg-secondary/50 p-3 text-xs text-muted-foreground">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                    <span>
+                      Note: after placing your order, you'll be given an order confirmation
+                      number — please write/quote it in the transfer narration (description) when
+                      sending your payment, so we can match it to your order.
+                    </span>
+                  </p>
                 </div>
               )}
             </div>
@@ -339,6 +347,13 @@ const Checkout = () => {
               </div>
               <p className="text-xs text-muted-foreground">
                 Delivery cost is not included and will be communicated separately.
+              </p>
+              <p className="rounded-lg bg-secondary/50 p-3 text-xs text-muted-foreground">
+                Please quote your order reference{" "}
+                <span className="font-semibold text-foreground">
+                  {confirmedOrder.id.slice(0, 8).toUpperCase()}
+                </span>{" "}
+                in the transfer narration when making your bank transfer.
               </p>
             </div>
           )}

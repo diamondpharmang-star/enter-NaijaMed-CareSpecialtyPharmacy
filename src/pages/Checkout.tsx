@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Copy } from "lucide-react";
+import { Loader2, Copy, Info } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +34,11 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"paystack" | "bank_transfer">("paystack");
+  const [confirmedOrder, setConfirmedOrder] = useState<{
+    id: string;
+    total: number;
+    items: typeof items;
+  } | null>(null);
 
   const [form, setForm] = useState({
     customer_name: profile?.full_name || "",
@@ -115,8 +128,9 @@ const Checkout = () => {
           .invoke("send-order-notification", { body: { type: "new_order", order_id: order.id } })
           .catch((e) => console.error("Failed to send order notification:", e));
 
+        setConfirmedOrder({ id: order.id, total: totalAmount, items });
         clearCart();
-        navigate(`/order-confirmation?order_id=${order.id}`);
+        setIsSubmitting(false);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -124,7 +138,7 @@ const Checkout = () => {
     }
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && !confirmedOrder) {
     navigate("/cart");
     return null;
   }
@@ -267,6 +281,10 @@ const Checkout = () => {
               <span>Total</span>
               <span>{formatNaira(totalAmount)}</span>
             </div>
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-secondary/50 p-3 text-xs text-muted-foreground">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+              <span>Note: the cost of delivery is not included in the price above. Delivery fees will be communicated separately.</span>
+            </div>
             <Button
               className="mt-6 w-full"
               size="lg"
@@ -279,6 +297,65 @@ const Checkout = () => {
           </div>
         </div>
       </div>
+
+      <Dialog
+        open={!!confirmedOrder}
+        onOpenChange={(open) => {
+          if (!open && confirmedOrder) {
+            const orderId = confirmedOrder.id;
+            setConfirmedOrder(null);
+            navigate(`/order-confirmation?order_id=${orderId}`);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Order confirmed</DialogTitle>
+            <DialogDescription>
+              Thank you! Your order has been placed successfully. Here's a summary of your order.
+            </DialogDescription>
+          </DialogHeader>
+          {confirmedOrder && (
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Order reference</span>
+                <span className="font-medium text-foreground">
+                  {confirmedOrder.id.slice(0, 8).toUpperCase()}
+                </span>
+              </div>
+              <div className="space-y-2 border-t border-border pt-3">
+                {confirmedOrder.items.map((item) => (
+                  <div key={item.product_id} className="flex justify-between text-muted-foreground">
+                    <span className="line-clamp-1 pr-2">
+                      {item.product_name} × {item.quantity}
+                    </span>
+                    <span className="shrink-0">{formatNaira(item.unit_price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between border-t border-border pt-3 text-base font-bold text-foreground">
+                <span>Total</span>
+                <span>{formatNaira(confirmedOrder.total)}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Delivery cost is not included and will be communicated separately.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              className="w-full"
+              onClick={() => {
+                const orderId = confirmedOrder?.id;
+                setConfirmedOrder(null);
+                if (orderId) navigate(`/order-confirmation?order_id=${orderId}`);
+              }}
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PharmacyLayout>
   );
 };

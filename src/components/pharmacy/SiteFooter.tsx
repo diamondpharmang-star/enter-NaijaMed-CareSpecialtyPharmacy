@@ -1,10 +1,26 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck, Truck, Lock, MapPin, Mail, MessageCircle } from "lucide-react";
+import { ShieldCheck, Truck, Lock, MapPin, Mail, MessageCircle, Clock, Facebook, Instagram, Twitter } from "lucide-react";
 import { WHATSAPP_NUMBER, WHATSAPP_LINK } from "@/lib/pharmacy";
 import { useCategories } from "@/hooks/useCategories";
 
 const SUPPORT_EMAIL = "care@diamondpharmacare.ng";
 const STORE_ADDRESS = "116 Okota Road, Lagos";
+
+// Links to be provided later — icons render disabled until real URLs are set.
+const SOCIAL_LINKS = [
+  { name: "Facebook", icon: Facebook, href: "" },
+  { name: "Instagram", icon: Instagram, href: "" },
+  { name: "Twitter", icon: Twitter, href: "" },
+  { name: "TikTok", icon: TikTokIcon, href: "" },
+];
+
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M16.6 5.82a4.28 4.28 0 0 1-3.11-1.37V15.4a4.6 4.6 0 1 1-3.96-4.56v2.34a2.28 2.28 0 1 0 1.6 2.18V2h2.36a4.28 4.28 0 0 0 3.11 3.63v2.19a6.6 6.6 0 0 1-2.36-.46V5.82Z" />
+    </svg>
+  );
+}
 
 export function SiteFooter() {
   const { categories } = useCategories();
@@ -40,6 +56,34 @@ export function SiteFooter() {
           >
             <MessageCircle className="h-4 w-4 text-accent" /> WhatsApp: {WHATSAPP_NUMBER}
           </a>
+          <div className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+            <span>
+              Operating hours: 8am – 10pm
+              <br />
+              Monday – Sunday
+            </span>
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            {SOCIAL_LINKS.map((social) => (
+              <a
+                key={social.name}
+                href={social.href || undefined}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={social.name}
+                aria-disabled={!social.href}
+                onClick={(e) => {
+                  if (!social.href) e.preventDefault();
+                }}
+                className={`flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors ${
+                  social.href ? "hover:bg-primary hover:text-primary-foreground" : "cursor-not-allowed opacity-50"
+                }`}
+              >
+                <social.icon className="h-4 w-4" />
+              </a>
+            ))}
+          </div>
         </div>
 
         <div>

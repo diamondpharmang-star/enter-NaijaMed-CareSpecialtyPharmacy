@@ -127,29 +127,36 @@ const ProductDetail = () => {
             </p>
 
             {hasPrice ? (
-              <div className="mt-2 flex items-center gap-4">
-                <div className="flex items-center rounded-md border border-input">
-                  <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-10 text-center font-medium">{quantity}</span>
-                  <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => q + 1)}>
-                    <Plus className="h-4 w-4" />
+              <div className="mt-2 flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center rounded-md border border-input">
+                    <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="w-10 text-center font-medium">{quantity}</span>
+                    <Button variant="ghost" size="icon" onClick={() => setQuantity((q) => q + 1)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    size="lg"
+                    className="flex-1"
+                    onClick={handleAddToCart}
+                    disabled={product.stock_quantity <= 0}
+                  >
+                    <ShoppingCart className="mr-2 h-4 w-4" /> Add to cart
                   </Button>
                 </div>
-                <Button
-                  size="lg"
-                  className="flex-1"
-                  onClick={handleAddToCart}
-                  disabled={product.stock_quantity <= 0}
-                >
-                  <ShoppingCart className="mr-2 h-4 w-4" /> Add to cart
+                <Button asChild size="lg" variant="secondary">
+                  <a href={whatsappQuoteLink(product.name)} target="_blank" rel="noreferrer">
+                    <MessageCircle className="mr-2 h-4 w-4" /> Order on WhatsApp
+                  </a>
                 </Button>
               </div>
             ) : (
               <Button asChild size="lg" variant="secondary" className="mt-2">
                 <a href={whatsappQuoteLink(product.name)} target="_blank" rel="noreferrer">
-                  <MessageCircle className="mr-2 h-4 w-4" /> Buy on WhatsApp
+                  <MessageCircle className="mr-2 h-4 w-4" /> Order on WhatsApp
                 </a>
               </Button>
             )}

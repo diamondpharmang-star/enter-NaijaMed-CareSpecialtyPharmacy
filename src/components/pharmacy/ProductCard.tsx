@@ -56,21 +56,28 @@ export function ProductCard({ product }: { product: Product }) {
           {hasPrice ? formatNaira(Number(product.price)) : "Price on request"}
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="flex flex-col gap-2 p-4 pt-0">
         {hasPrice ? (
-          <Button
-            className="w-full"
-            variant="default"
-            onClick={handleAddToCart}
-            disabled={product.stock_quantity <= 0}
-          >
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            {product.stock_quantity > 0 ? "Add to cart" : "Out of stock"}
-          </Button>
+          <>
+            <Button
+              className="w-full"
+              variant="default"
+              onClick={handleAddToCart}
+              disabled={product.stock_quantity <= 0}
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              {product.stock_quantity > 0 ? "Add to cart" : "Out of stock"}
+            </Button>
+            <Button asChild className="w-full" variant="secondary">
+              <a href={whatsappQuoteLink(product.name)} target="_blank" rel="noreferrer">
+                <MessageCircle className="mr-2 h-4 w-4" /> Order on WhatsApp
+              </a>
+            </Button>
+          </>
         ) : (
           <Button asChild className="w-full" variant="secondary">
             <a href={whatsappQuoteLink(product.name)} target="_blank" rel="noreferrer">
-              <MessageCircle className="mr-2 h-4 w-4" /> Buy on WhatsApp
+              <MessageCircle className="mr-2 h-4 w-4" /> Order on WhatsApp
             </a>
           </Button>
         )}

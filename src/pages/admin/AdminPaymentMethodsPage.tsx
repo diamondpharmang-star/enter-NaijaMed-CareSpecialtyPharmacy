@@ -19,6 +19,10 @@ const PAYMENT_METHOD_LABELS: Record<PaymentMethod, { title: string; description:
     title: "Pay with card / bank via Flutterwave",
     description: "Secure instant payment — card, bank transfer, USSD, or mobile money.",
   },
+  kora: {
+    title: "Pay with card / bank via Kora",
+    description: "Secure Nigerian payment through Kora hosted checkout.",
+  },
   bank_transfer: {
     title: "Direct bank transfer",
     description: "Customers transfer manually to your bank account.",

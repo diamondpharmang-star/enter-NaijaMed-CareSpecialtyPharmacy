@@ -1,0 +1,14 @@
+-- Add Kora as a checkout payment method.
+ALTER TABLE public.orders DROP CONSTRAINT orders_payment_method_check;
+ALTER TABLE public.orders ADD CONSTRAINT orders_payment_method_check
+  CHECK (payment_method = ANY (ARRAY['paystack'::text, 'bank_transfer'::text, 'flutterwave'::text, 'kora'::text]));
+
+ALTER TABLE public.payment_settings DROP CONSTRAINT payment_settings_method_check;
+ALTER TABLE public.payment_settings ADD CONSTRAINT payment_settings_method_check
+  CHECK (method = ANY (ARRAY['paystack'::text, 'bank_transfer'::text, 'flutterwave'::text, 'kora'::text]));
+
+ALTER TABLE public.orders ADD COLUMN kora_reference text;
+CREATE UNIQUE INDEX orders_kora_reference_key ON public.orders (kora_reference) WHERE kora_reference IS NOT NULL;
+
+INSERT INTO public.payment_settings (method, is_enabled) VALUES ('kora', false)
+ON CONFLICT (method) DO NOTHING;

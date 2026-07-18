@@ -109,7 +109,12 @@ Deno.serve(async (req: Request) => {
 
     const orderRef = order.id.slice(0, 8).toUpperCase();
     const itemsTable = renderItemsTable((items ?? []) as OrderItemRow[]);
-    const paymentMethodLabel = order.payment_method === "bank_transfer" ? "Bank Transfer" : "Paystack";
+    const paymentMethodLabel = {
+      bank_transfer: "Bank Transfer",
+      paystack: "Paystack",
+      flutterwave: "Flutterwave",
+      kora: "Kora",
+    }[order.payment_method] || order.payment_method;
 
     if (type === "new_order") {
       const customerHtml = `

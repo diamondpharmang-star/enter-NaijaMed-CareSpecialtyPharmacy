@@ -35,7 +35,7 @@ const Checkout = () => {
   const { settings: paymentSettings, bankDetails, isLoading: isLoadingPaymentSettings } = usePaymentSettings();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"paystack" | "flutterwave" | "bank_transfer">("paystack");
+  const [paymentMethod, setPaymentMethod] = useState<"paystack" | "flutterwave" | "kora" | "bank_transfer">("paystack");
   const [confirmedOrder, setConfirmedOrder] = useState<{
     id: string;
     total: number;
@@ -56,6 +56,7 @@ const Checkout = () => {
     if (!paymentSettings[paymentMethod]) {
       if (paymentSettings.paystack) setPaymentMethod("paystack");
       else if (paymentSettings.flutterwave) setPaymentMethod("flutterwave");
+      else if (paymentSettings.kora) setPaymentMethod("kora");
       else if (paymentSettings.bank_transfer) setPaymentMethod("bank_transfer");
     }
   }, [isLoadingPaymentSettings, paymentSettings, paymentMethod]);
@@ -71,6 +72,7 @@ const Checkout = () => {
     !isLoadingPaymentSettings &&
     !paymentSettings.paystack &&
     !paymentSettings.flutterwave &&
+    !paymentSettings.kora &&
     !paymentSettings.bank_transfer;
 
   const copyAccountNumber = () => {
@@ -83,30 +85,50 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      if (paymentMethod === "paystack" || paymentMethod === "flutterwave") {
-        const functionName =
-          paymentMethod === "paystack" ? "paystack-initialize" : "flutterwave-initialize";
-        const { data, error } = await supabase.functions.invoke(functionName, {
-          body: {
-            user_id: user?.id || null,
-            customer_name: form.customer_name,
-            email: form.email,
-            phone: form.phone,
-            delivery_address: form.delivery_address,
-            city: form.city,
-            state: form.state,
-            items: items.map((i) => ({
-              product_id: i.product_id,
-              product_name: i.product_name,
-              unit_price: i.unit_price,
-              quantity: i.quantity,
-            })),
-          },
-        });
+      if (paymentMethod === "paystack" || paymentMethod === "flutterwave" || paymentMethod === "kora") {
+        const requestBody = {
+          user_id: user?.id || null,
+          customer_name: form.customer_name,
+          email: form.email,
+          phone: form.phone,
+          delivery_address: form.delivery_address,
+          city: form.city,
+          state: form.state,
+          items: items.map((i) => ({
+            product_id: i.product_id,
+            product_name: i.product_name,
+            unit_price: i.unit_price,
+            quantity: i.quantity,
+          })),
+        };
+        let data: { authorization_url?: string; error?: string } | null = null;
+        let error: { message?: string } | null = null;
+
+        if (paymentMethod === "kora") {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const accessToken = sessionData.session?.access_token;
+          const response = await fetch("/.netlify/functions/kora-initialize", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
+            body: JSON.stringify(requestBody),
+          });
+          data = await response.json();
+          if (!response.ok) error = { message: data?.error };
+        } else {
+          const functionName =
+            paymentMethod === "paystack" ? "paystack-initialize" : "flutterwave-initialize";
+          const result = await supabase.functions.invoke(functionName, { body: requestBody });
+          data = result.data;
+          error = result.error;
+        }
 
         if (error || data?.error) {
           throw new Error(data?.error || error?.message || "Failed to initialize payment.");
         }
+        if (!data?.authorization_url) throw new Error("Payment checkout URL was not returned.");
 
         clearCart();
         window.location.href = data.authorization_url;
@@ -256,6 +278,17 @@ const Checkout = () => {
                         <p className="font-medium text-foreground">Pay with card / bank via Flutterwave</p>
                         <p className="text-sm text-muted-foreground">
                           Secure instant payment — card, bank transfer, USSD, or mobile money.
+                        </p>
+                      </div>
+                    </label>
+                  )}
+                  {paymentSettings.kora && (
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-input p-4 has-[:checked]:border-primary has-[:checked]:bg-secondary/60">
+                      <RadioGroupItem value="kora" id="kora" />
+                      <div>
+                        <p className="font-medium text-foreground">Pay with card / bank via Kora</p>
+                        <p className="text-sm text-muted-foreground">
+                          Secure Nigerian payment through Kora hosted checkout.
                         </p>
                       </div>
                     </label>

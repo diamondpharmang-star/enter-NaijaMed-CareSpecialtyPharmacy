@@ -1,0 +1,23 @@
+-- Payment method settings: allows admin to enable/disable checkout payment options.
+CREATE TABLE public.payment_settings (
+  method text PRIMARY KEY CHECK (method IN ('paystack', 'bank_transfer')),
+  is_enabled boolean NOT NULL DEFAULT true,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.payment_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view payment settings"
+ON public.payment_settings
+FOR SELECT
+USING (true);
+
+CREATE POLICY "Admins can manage payment settings"
+ON public.payment_settings
+FOR ALL
+USING (is_admin())
+WITH CHECK (is_admin());
+
+INSERT INTO public.payment_settings (method, is_enabled) VALUES
+  ('paystack', true),
+  ('bank_transfer', true);

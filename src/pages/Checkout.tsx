@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Copy, Info } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePaymentSettings } from "@/hooks/usePaymentSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira } from "@/lib/pharmacy";
 import { NIGERIAN_STATES, BANK_TRANSFER_DETAILS } from "@/lib/nigeria";
@@ -31,6 +32,7 @@ import { toast } from "sonner";
 const Checkout = () => {
   const { items, totalAmount, clearCart } = useCart();
   const { user, profile } = useAuth();
+  const { settings: paymentSettings, isLoading: isLoadingPaymentSettings } = usePaymentSettings();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"paystack" | "bank_transfer">("paystack");
@@ -49,6 +51,14 @@ const Checkout = () => {
     state: "",
   });
 
+  useEffect(() => {
+    if (isLoadingPaymentSettings) return;
+    if (!paymentSettings[paymentMethod]) {
+      if (paymentSettings.paystack) setPaymentMethod("paystack");
+      else if (paymentSettings.bank_transfer) setPaymentMethod("bank_transfer");
+    }
+  }, [isLoadingPaymentSettings, paymentSettings, paymentMethod]);
+
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -56,13 +66,16 @@ const Checkout = () => {
   const isFormValid =
     form.customer_name && form.email && form.phone && form.delivery_address && form.city && form.state;
 
+  const noPaymentMethodAvailable =
+    !isLoadingPaymentSettings && !paymentSettings.paystack && !paymentSettings.bank_transfer;
+
   const copyAccountNumber = () => {
     navigator.clipboard.writeText(BANK_TRANSFER_DETAILS.accountNumber);
     toast.success("Account number copied");
   };
 
   const handlePlaceOrder = async () => {
-    if (!isFormValid || items.length === 0) return;
+    if (!isFormValid || items.length === 0 || !paymentSettings[paymentMethod]) return;
     setIsSubmitting(true);
 
     try {
@@ -215,26 +228,36 @@ const Checkout = () => {
 
             <div className="rounded-xl border border-border bg-card p-6">
               <h2 className="mb-4 text-lg font-semibold text-foreground">Payment Method</h2>
-              <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as typeof paymentMethod)}>
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-input p-4 has-[:checked]:border-primary has-[:checked]:bg-secondary/60">
-                  <RadioGroupItem value="paystack" id="paystack" />
-                  <div>
-                    <p className="font-medium text-foreground">Pay with card / bank via Paystack</p>
-                    <p className="text-sm text-muted-foreground">Secure instant payment — card, bank, or USSD.</p>
-                  </div>
-                </label>
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-input p-4 has-[:checked]:border-primary has-[:checked]:bg-secondary/60">
-                  <RadioGroupItem value="bank_transfer" id="bank_transfer" />
-                  <div>
-                    <p className="font-medium text-foreground">Direct bank transfer</p>
-                    <p className="text-sm text-muted-foreground">
-                      We'll show you our account details to complete a manual transfer.
-                    </p>
-                  </div>
-                </label>
-              </RadioGroup>
+              {noPaymentMethodAvailable ? (
+                <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                  No payment method is currently available. Please contact us to complete your order.
+                </p>
+              ) : (
+                <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as typeof paymentMethod)}>
+                  {paymentSettings.paystack && (
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-input p-4 has-[:checked]:border-primary has-[:checked]:bg-secondary/60">
+                      <RadioGroupItem value="paystack" id="paystack" />
+                      <div>
+                        <p className="font-medium text-foreground">Pay with card / bank via Paystack</p>
+                        <p className="text-sm text-muted-foreground">Secure instant payment — card, bank, or USSD.</p>
+                      </div>
+                    </label>
+                  )}
+                  {paymentSettings.bank_transfer && (
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-input p-4 has-[:checked]:border-primary has-[:checked]:bg-secondary/60">
+                      <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                      <div>
+                        <p className="font-medium text-foreground">Direct bank transfer</p>
+                        <p className="text-sm text-muted-foreground">
+                          We'll show you our account details to complete a manual transfer.
+                        </p>
+                      </div>
+                    </label>
+                  )}
+                </RadioGroup>
+              )}
 
-              {paymentMethod === "bank_transfer" && (
+              {paymentMethod === "bank_transfer" && paymentSettings.bank_transfer && (
                 <div className="mt-4 rounded-lg border border-primary/30 bg-secondary/30 p-4">
                   <h3 className="font-semibold text-foreground">Bank transfer details</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -296,7 +319,7 @@ const Checkout = () => {
             <Button
               className="mt-6 w-full"
               size="lg"
-              disabled={!isFormValid || isSubmitting}
+              disabled={!isFormValid || isSubmitting || noPaymentMethodAvailable}
               onClick={handlePlaceOrder}
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -3547,6 +3547,24 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_settings: {
+        Row: {
+          is_enabled: boolean
+          method: string
+          updated_at: string
+        }
+        Insert: {
+          is_enabled?: boolean
+          method: string
+          updated_at?: string
+        }
+        Update: {
+          is_enabled?: boolean
+          method?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           b2b_price: number | null

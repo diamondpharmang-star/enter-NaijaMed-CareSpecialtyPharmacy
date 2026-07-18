@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck, Truck, Lock, MapPin, Mail, MessageCircle, Clock, Facebook, Instagram, Twitter } from "lucide-react";
+import { ShieldCheck, Truck, Lock, MapPin, Mail, MessageCircle, Clock, Facebook, Instagram, Twitter, BadgeCheck } from "lucide-react";
 import { WHATSAPP_NUMBER, WHATSAPP_LINK } from "@/lib/pharmacy";
 import { useCategories } from "@/hooks/useCategories";
 
@@ -118,6 +118,7 @@ export function SiteFooter() {
             <li className="flex items-center gap-2"><Lock className="h-4 w-4 text-accent" /> Secure Paystack checkout</li>
             <li className="flex items-center gap-2"><Truck className="h-4 w-4 text-accent" /> Nationwide delivery</li>
             <li className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-accent" /> Pharmacist support on WhatsApp</li>
+            <li className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-accent" /> NAFDAC and PCN Compliance</li>
           </ul>
         </div>
       </div>

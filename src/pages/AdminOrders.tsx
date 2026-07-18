@@ -47,6 +47,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira, slugify, type Category } from "@/lib/pharmacy";
 import { useCategories } from "@/hooks/useCategories";
+import { usePaymentSettings, type PaymentMethod } from "@/hooks/usePaymentSettings";
 import type { Tables as DbTables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -901,6 +902,79 @@ function DeleteCategoryButton({
   );
 }
 
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, { title: string; description: string }> = {
+  paystack: {
+    title: "Pay with card / bank via Paystack",
+    description: "Secure instant payment — card, bank, or USSD.",
+  },
+  bank_transfer: {
+    title: "Direct bank transfer",
+    description: "Customers transfer manually to your bank account.",
+  },
+};
+
+function PaymentMethodsPanel() {
+  const { settings, isLoading, refetch } = usePaymentSettings();
+  const [savingMethod, setSavingMethod] = useState<PaymentMethod | null>(null);
+
+  const handleToggle = async (method: PaymentMethod, checked: boolean) => {
+    const otherMethod: PaymentMethod = method === "paystack" ? "bank_transfer" : "paystack";
+    if (!checked && !settings[otherMethod]) {
+      toast.error("At least one payment method must remain enabled.");
+      return;
+    }
+
+    setSavingMethod(method);
+    const { error } = await supabase
+      .from("payment_settings")
+      .update({ is_enabled: checked, updated_at: new Date().toISOString() })
+      .eq("method", method);
+    setSavingMethod(null);
+
+    if (error) {
+      toast.error("Failed to update payment method.");
+      return;
+    }
+
+    toast.success(
+      `${PAYMENT_METHOD_LABELS[method].title} ${checked ? "enabled" : "disabled"} for checkout.`
+    );
+    refetch();
+  };
+
+  return (
+    <div className="mt-6 max-w-2xl space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Enable or disable payment methods available to customers at checkout. At least one method
+        must stay enabled.
+      </p>
+      {isLoading ? (
+        <p className="text-muted-foreground">Loading...</p>
+      ) : (
+        (Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((method) => (
+          <div
+            key={method}
+            className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-4"
+          >
+            <div>
+              <p className="font-medium text-foreground">{PAYMENT_METHOD_LABELS[method].title}</p>
+              <p className="text-sm text-muted-foreground">{PAYMENT_METHOD_LABELS[method].description}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {savingMethod === method && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              <Switch
+                checked={settings[method]}
+                disabled={savingMethod === method}
+                onCheckedChange={(checked) => handleToggle(method, checked)}
+              />
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
 const AdminOrders = () => {
   const { profile, isLoading: authLoading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -1065,6 +1139,7 @@ const AdminOrders = () => {
               <TabsTrigger value="quotes">Quote Requests ({filteredQuoteRequests.length})</TabsTrigger>
               <TabsTrigger value="products">Manage Products ({filteredProducts.length})</TabsTrigger>
               <TabsTrigger value="categories">Categories ({categories.length})</TabsTrigger>
+              <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
             </TabsList>
 
             <TabsContent value="orders">
@@ -1318,6 +1393,10 @@ const AdminOrders = () => {
                   </Table>
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="payment-methods">
+              <PaymentMethodsPanel />
             </TabsContent>
           </Tabs>
         )}

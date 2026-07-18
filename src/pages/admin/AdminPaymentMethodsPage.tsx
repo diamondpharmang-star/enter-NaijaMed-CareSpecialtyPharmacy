@@ -15,6 +15,10 @@ const PAYMENT_METHOD_LABELS: Record<PaymentMethod, { title: string; description:
     title: "Pay with card / bank via Paystack",
     description: "Secure instant payment — card, bank, or USSD.",
   },
+  flutterwave: {
+    title: "Pay with card / bank via Flutterwave",
+    description: "Secure instant payment — card, bank transfer, USSD, or mobile money.",
+  },
   bank_transfer: {
     title: "Direct bank transfer",
     description: "Customers transfer manually to your bank account.",
@@ -118,8 +122,10 @@ const AdminPaymentMethodsPage = () => {
   const [savingMethod, setSavingMethod] = useState<PaymentMethod | null>(null);
 
   const handleToggle = async (method: PaymentMethod, checked: boolean) => {
-    const otherMethod: PaymentMethod = method === "paystack" ? "bank_transfer" : "paystack";
-    if (!checked && !settings[otherMethod]) {
+    const otherMethodsEnabled = (Object.keys(settings) as PaymentMethod[]).some(
+      (m) => m !== method && settings[m]
+    );
+    if (!checked && !otherMethodsEnabled) {
       toast.error("At least one payment method must remain enabled.");
       return;
     }

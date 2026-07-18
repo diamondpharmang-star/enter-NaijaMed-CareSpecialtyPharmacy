@@ -1,0 +1,14 @@
+-- Add flutterwave as a valid payment method/settings option
+ALTER TABLE public.orders DROP CONSTRAINT orders_payment_method_check;
+ALTER TABLE public.orders ADD CONSTRAINT orders_payment_method_check
+  CHECK (payment_method = ANY (ARRAY['paystack'::text, 'bank_transfer'::text, 'flutterwave'::text]));
+
+ALTER TABLE public.payment_settings DROP CONSTRAINT payment_settings_method_check;
+ALTER TABLE public.payment_settings ADD CONSTRAINT payment_settings_method_check
+  CHECK (method = ANY (ARRAY['paystack'::text, 'bank_transfer'::text, 'flutterwave'::text]));
+
+-- Add a column to store the flutterwave transaction reference, mirroring paystack_reference
+ALTER TABLE public.orders ADD COLUMN flutterwave_reference text;
+
+INSERT INTO public.payment_settings (method, is_enabled) VALUES ('flutterwave', true)
+ON CONFLICT (method) DO NOTHING;

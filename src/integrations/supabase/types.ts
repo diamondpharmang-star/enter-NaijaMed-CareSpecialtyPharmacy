@@ -3503,6 +3503,7 @@ export type Database = {
           customer_name: string
           delivery_address: string
           email: string
+          flutterwave_reference: string | null
           id: string
           order_status: string
           payment_method: string
@@ -3519,6 +3520,7 @@ export type Database = {
           customer_name: string
           delivery_address: string
           email: string
+          flutterwave_reference?: string | null
           id?: string
           order_status?: string
           payment_method: string
@@ -3535,6 +3537,7 @@ export type Database = {
           customer_name?: string
           delivery_address?: string
           email?: string
+          flutterwave_reference?: string | null
           id?: string
           order_status?: string
           payment_method?: string

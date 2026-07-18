@@ -15,6 +15,9 @@ const OrderConfirmation = () => {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("order_id");
   const reference = searchParams.get("reference") || searchParams.get("trxref");
+  const flwTransactionId = searchParams.get("transaction_id");
+  const flwTxRef = searchParams.get("tx_ref");
+  const isFlutterwaveRedirect = searchParams.get("provider") === "flutterwave";
   const [order, setOrder] = useState<Order | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const { bankDetails } = usePaymentSettings();
@@ -33,13 +36,25 @@ const OrderConfirmation = () => {
         }
       }
 
+      if (isFlutterwaveRedirect && flwTransactionId) {
+        setIsVerifying(true);
+        const { data } = await supabase.functions.invoke("flutterwave-verify", {
+          body: { transaction_id: flwTransactionId, tx_ref: flwTxRef, order_id: orderId },
+        });
+        setIsVerifying(false);
+        if (data?.order) {
+          setOrder(data.order);
+          return;
+        }
+      }
+
       if (orderId) {
         const { data } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
         setOrder(data);
       }
     };
     run();
-  }, [orderId, reference]);
+  }, [orderId, reference, isFlutterwaveRedirect, flwTransactionId, flwTxRef]);
 
   const copyAccountNumber = () => {
     navigator.clipboard.writeText(bankDetails.accountNumber);
@@ -70,6 +85,11 @@ const OrderConfirmation = () => {
   const isPaid = order.payment_status === "paid";
   const isFailed = order.payment_status === "failed";
   const isBankTransfer = order.payment_method === "bank_transfer";
+  const PAYMENT_METHOD_LABELS: Record<string, string> = {
+    paystack: "Paystack",
+    flutterwave: "Flutterwave",
+    bank_transfer: "Bank transfer",
+  };
 
   return (
     <PharmacyLayout>
@@ -96,7 +116,7 @@ const OrderConfirmation = () => {
             <div className="flex justify-between py-1">
               <span className="text-muted-foreground">Payment method</span>
               <span className="font-medium text-foreground">
-                {isBankTransfer ? "Bank transfer" : "Paystack"}
+                {PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method}
               </span>
             </div>
             <div className="flex justify-between py-1">

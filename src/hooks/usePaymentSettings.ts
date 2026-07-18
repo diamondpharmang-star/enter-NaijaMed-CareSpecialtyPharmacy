@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type PaymentMethod = "paystack" | "bank_transfer";
+export type PaymentMethod = "paystack" | "bank_transfer" | "flutterwave";
 
 export interface BankTransferDetails {
   bankName: string;
@@ -19,6 +19,7 @@ export function usePaymentSettings() {
   const [settings, setSettings] = useState<Record<PaymentMethod, boolean>>({
     paystack: true,
     bank_transfer: true,
+    flutterwave: true,
   });
   const [bankDetails, setBankDetails] = useState<BankTransferDetails>(DEFAULT_BANK_DETAILS);
   const [isLoading, setIsLoading] = useState(true);

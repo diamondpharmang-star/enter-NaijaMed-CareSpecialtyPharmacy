@@ -35,7 +35,7 @@ const Checkout = () => {
   const { settings: paymentSettings, bankDetails, isLoading: isLoadingPaymentSettings } = usePaymentSettings();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"paystack" | "bank_transfer">("paystack");
+  const [paymentMethod, setPaymentMethod] = useState<"paystack" | "flutterwave" | "bank_transfer">("paystack");
   const [confirmedOrder, setConfirmedOrder] = useState<{
     id: string;
     total: number;
@@ -55,6 +55,7 @@ const Checkout = () => {
     if (isLoadingPaymentSettings) return;
     if (!paymentSettings[paymentMethod]) {
       if (paymentSettings.paystack) setPaymentMethod("paystack");
+      else if (paymentSettings.flutterwave) setPaymentMethod("flutterwave");
       else if (paymentSettings.bank_transfer) setPaymentMethod("bank_transfer");
     }
   }, [isLoadingPaymentSettings, paymentSettings, paymentMethod]);
@@ -67,7 +68,10 @@ const Checkout = () => {
     form.customer_name && form.email && form.phone && form.delivery_address && form.city && form.state;
 
   const noPaymentMethodAvailable =
-    !isLoadingPaymentSettings && !paymentSettings.paystack && !paymentSettings.bank_transfer;
+    !isLoadingPaymentSettings &&
+    !paymentSettings.paystack &&
+    !paymentSettings.flutterwave &&
+    !paymentSettings.bank_transfer;
 
   const copyAccountNumber = () => {
     navigator.clipboard.writeText(bankDetails.accountNumber);
@@ -79,8 +83,10 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      if (paymentMethod === "paystack") {
-        const { data, error } = await supabase.functions.invoke("paystack-initialize", {
+      if (paymentMethod === "paystack" || paymentMethod === "flutterwave") {
+        const functionName =
+          paymentMethod === "paystack" ? "paystack-initialize" : "flutterwave-initialize";
+        const { data, error } = await supabase.functions.invoke(functionName, {
           body: {
             user_id: user?.id || null,
             customer_name: form.customer_name,
@@ -240,6 +246,17 @@ const Checkout = () => {
                       <div>
                         <p className="font-medium text-foreground">Pay with card / bank via Paystack</p>
                         <p className="text-sm text-muted-foreground">Secure instant payment — card, bank, or USSD.</p>
+                      </div>
+                    </label>
+                  )}
+                  {paymentSettings.flutterwave && (
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-input p-4 has-[:checked]:border-primary has-[:checked]:bg-secondary/60">
+                      <RadioGroupItem value="flutterwave" id="flutterwave" />
+                      <div>
+                        <p className="font-medium text-foreground">Pay with card / bank via Flutterwave</p>
+                        <p className="text-sm text-muted-foreground">
+                          Secure instant payment — card, bank transfer, USSD, or mobile money.
+                        </p>
                       </div>
                     </label>
                   )}

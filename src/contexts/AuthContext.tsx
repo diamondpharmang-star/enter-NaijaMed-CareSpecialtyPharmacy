@@ -10,7 +10,7 @@ export interface Profile {
   account_type: "retail" | "b2b";
   business_name: string | null;
   business_license_number: string | null;
-  role: "customer" | "admin";
+  role: "customer" | "admin" | "staff";
 }
 
 interface AuthContextValue {

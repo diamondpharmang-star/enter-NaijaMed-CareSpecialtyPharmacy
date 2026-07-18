@@ -1,0 +1,127 @@
+-- 1. Allow 'staff' role
+ALTER TABLE public.profiles DROP CONSTRAINT profiles_role_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check
+  CHECK (role = ANY (ARRAY['customer'::text, 'admin'::text, 'staff'::text]));
+
+-- 2. staff_permissions table
+CREATE TABLE public.staff_permissions (
+  user_id uuid PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
+  can_view_orders boolean NOT NULL DEFAULT false,
+  can_view_quotes boolean NOT NULL DEFAULT false,
+  can_manage_products boolean NOT NULL DEFAULT false,
+  can_manage_categories boolean NOT NULL DEFAULT false,
+  can_manage_payment_methods boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.staff_permissions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can manage staff permissions"
+ON public.staff_permissions
+FOR ALL
+USING (is_admin())
+WITH CHECK (is_admin());
+
+CREATE POLICY "Staff can view own permissions"
+ON public.staff_permissions
+FOR SELECT
+USING (auth.uid() = user_id);
+
+-- 3. Helper: has_staff_permission(perm) - true for admins (full access) or staff with the flag set
+CREATE OR REPLACE FUNCTION public.has_staff_permission(perm text)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  result boolean;
+BEGIN
+  IF is_admin() THEN
+    RETURN true;
+  END IF;
+
+  EXECUTE format(
+    'SELECT %I FROM public.staff_permissions WHERE user_id = $1',
+    perm
+  ) INTO result USING auth.uid();
+
+  RETURN coalesce(result, false);
+END;
+$$;
+
+-- 4. Extend RLS on orders, order_items, medication_quote_requests, products, categories, payment_settings
+-- Orders: staff with can_view_orders may view/update
+DROP POLICY IF EXISTS "Users view own orders or admin views all" ON public.orders;
+CREATE POLICY "Users view own orders or admin views all"
+ON public.orders
+FOR SELECT
+USING (auth.uid() = user_id OR user_id IS NULL OR is_admin() OR has_staff_permission('can_view_orders'));
+
+DROP POLICY IF EXISTS "Admins can update orders" ON public.orders;
+CREATE POLICY "Admins can update orders"
+ON public.orders
+FOR UPDATE
+USING (is_admin() OR has_staff_permission('can_view_orders'))
+WITH CHECK (is_admin() OR has_staff_permission('can_view_orders'));
+
+-- order_items: staff with can_view_orders may view
+DROP POLICY IF EXISTS "Users view own order items or admin views all" ON public.order_items;
+CREATE POLICY "Users view own order items or admin views all"
+ON public.order_items
+FOR SELECT
+USING (
+  is_admin()
+  OR has_staff_permission('can_view_orders')
+  OR EXISTS (
+    SELECT 1 FROM public.orders o
+    WHERE o.id = order_items.order_id
+      AND (o.user_id = auth.uid() OR o.user_id IS NULL)
+  )
+);
+
+-- medication_quote_requests: staff with can_view_quotes may view/update
+DROP POLICY IF EXISTS "Admins can view medication quote requests" ON public.medication_quote_requests;
+CREATE POLICY "Admins can view medication quote requests"
+ON public.medication_quote_requests
+FOR SELECT
+USING (is_admin() OR has_staff_permission('can_view_quotes'));
+
+DROP POLICY IF EXISTS "Admins can update medication quote requests" ON public.medication_quote_requests;
+CREATE POLICY "Admins can update medication quote requests"
+ON public.medication_quote_requests
+FOR UPDATE
+USING (is_admin() OR has_staff_permission('can_view_quotes'))
+WITH CHECK (is_admin() OR has_staff_permission('can_view_quotes'));
+
+-- products: staff with can_manage_products may manage
+DROP POLICY IF EXISTS "Admins can manage products" ON public.products;
+CREATE POLICY "Admins can manage products"
+ON public.products
+FOR ALL
+USING (is_admin() OR has_staff_permission('can_manage_products'))
+WITH CHECK (is_admin() OR has_staff_permission('can_manage_products'));
+
+DROP POLICY IF EXISTS "Anyone can view active products" ON public.products;
+CREATE POLICY "Anyone can view active products"
+ON public.products
+FOR SELECT
+USING (is_active = true OR is_admin() OR has_staff_permission('can_manage_products'));
+
+-- categories: staff with can_manage_categories may manage
+DROP POLICY IF EXISTS "Admins can manage categories" ON public.categories;
+CREATE POLICY "Admins can manage categories"
+ON public.categories
+FOR ALL
+USING (is_admin() OR has_staff_permission('can_manage_categories'))
+WITH CHECK (is_admin() OR has_staff_permission('can_manage_categories'));
+
+-- payment_settings: staff with can_manage_payment_methods may manage
+DROP POLICY IF EXISTS "Admins can manage payment settings" ON public.payment_settings;
+CREATE POLICY "Admins can manage payment settings"
+ON public.payment_settings
+FOR ALL
+USING (is_admin() OR has_staff_permission('can_manage_payment_methods'))
+WITH CHECK (is_admin() OR has_staff_permission('can_manage_payment_methods'));

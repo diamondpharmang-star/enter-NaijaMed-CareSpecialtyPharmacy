@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { RequirePermission } from "@/components/admin/RequirePermission";
 import {
   Table,
   TableBody,
@@ -62,6 +63,7 @@ const AdminQuotesPage = () => {
 
   return (
     <AdminLayout title="Quote Requests" description="Customer inquiries for unlisted medication.">
+      <RequirePermission permission="can_view_quotes">
       {isLoading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : (
@@ -141,6 +143,7 @@ const AdminQuotesPage = () => {
           )}
         </>
       )}
+      </RequirePermission>
     </AdminLayout>
   );
 };

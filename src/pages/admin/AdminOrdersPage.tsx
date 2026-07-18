@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { RequirePermission } from "@/components/admin/RequirePermission";
 import {
   Table,
   TableBody,
@@ -69,6 +70,7 @@ const AdminOrdersPage = () => {
 
   return (
     <AdminLayout title="Orders" description="View and manage customer orders.">
+      <RequirePermission permission="can_view_orders">
       {isLoading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : (
@@ -160,6 +162,7 @@ const AdminOrdersPage = () => {
           )}
         </>
       )}
+      </RequirePermission>
     </AdminLayout>
   );
 };

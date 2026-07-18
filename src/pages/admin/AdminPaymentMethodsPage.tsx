@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Check } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { RequirePermission } from "@/components/admin/RequirePermission";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -146,6 +147,7 @@ const AdminPaymentMethodsPage = () => {
       title="Payment Methods"
       description="Enable or disable payment methods available to customers at checkout. At least one method must stay enabled."
     >
+      <RequirePermission permission="can_manage_payment_methods">
       {isLoading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : (
@@ -178,6 +180,7 @@ const AdminPaymentMethodsPage = () => {
           ))}
         </div>
       )}
+      </RequirePermission>
     </AdminLayout>
   );
 };

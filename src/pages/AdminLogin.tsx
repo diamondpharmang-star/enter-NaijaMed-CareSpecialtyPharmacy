@@ -30,9 +30,9 @@ const AdminLogin = () => {
       ? await supabase.from("profiles").select("role").eq("id", userId).maybeSingle()
       : { data: null };
 
-    if (!profile || profile.role !== "admin") {
+    if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
       await supabase.auth.signOut();
-      toast.error("This login is for administrators only.");
+      toast.error("This login is for administrators and staff only.");
       setIsSubmitting(false);
       return;
     }

@@ -10,13 +10,19 @@ interface AdminLayoutProps {
   children: ReactNode;
   /** Hide the "Back to Dashboard" link, used on the dashboard landing page itself. */
   isLanding?: boolean;
+  /** Restrict this page to full admins only (e.g. staff management). Staff are redirected to /admin. */
+  requireAdmin?: boolean;
 }
 
-export function AdminLayout({ title, description, children, isLanding }: AdminLayoutProps) {
+export function AdminLayout({ title, description, children, isLanding, requireAdmin }: AdminLayoutProps) {
   const { profile, isLoading } = useAuth();
 
-  if (!isLoading && (!profile || profile.role !== "admin")) {
+  if (!isLoading && (!profile || (profile.role !== "admin" && profile.role !== "staff"))) {
     return <Navigate to="/admin-login" replace />;
+  }
+
+  if (!isLoading && requireAdmin && profile?.role !== "admin") {
+    return <Navigate to="/admin" replace />;
   }
 
   return (

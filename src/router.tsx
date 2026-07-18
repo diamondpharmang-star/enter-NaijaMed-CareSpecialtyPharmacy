@@ -15,6 +15,7 @@ import AdminQuotesPage from "./pages/admin/AdminQuotesPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 import AdminPaymentMethodsPage from "./pages/admin/AdminPaymentMethodsPage";
+import AdminStaffPage from "./pages/admin/AdminStaffPage";
 import RequestQuote from "./pages/RequestQuote";
 import BestSellers from "./pages/BestSellers";
 import ReturnRefundPolicy from "./pages/ReturnRefundPolicy";
@@ -105,6 +106,11 @@ export const routers = [
     path: "/admin/payment-methods",
     name: "admin-payment-methods",
     element: <AdminPaymentMethodsPage />,
+  },
+  {
+    path: "/admin/staff",
+    name: "admin-staff",
+    element: <AdminStaffPage />,
   },
   {
     path: "/request-quote",

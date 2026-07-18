@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Loader2, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { RequirePermission } from "@/components/admin/RequirePermission";
 import {
   Table,
   TableBody,
@@ -228,6 +229,7 @@ const AdminCategoriesPage = () => {
 
   return (
     <AdminLayout title="Categories" description="Add, rename, or remove drug categories shown across the storefront.">
+      <RequirePermission permission="can_manage_categories">
       {isLoading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : (
@@ -267,6 +269,7 @@ const AdminCategoriesPage = () => {
           )}
         </>
       )}
+      </RequirePermission>
     </AdminLayout>
   );
 };

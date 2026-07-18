@@ -3662,11 +3662,55 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_permissions: {
+        Row: {
+          can_manage_categories: boolean
+          can_manage_payment_methods: boolean
+          can_manage_products: boolean
+          can_view_orders: boolean
+          can_view_quotes: boolean
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_manage_categories?: boolean
+          can_manage_payment_methods?: boolean
+          can_manage_products?: boolean
+          can_view_orders?: boolean
+          can_view_quotes?: boolean
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_manage_categories?: boolean
+          can_manage_payment_methods?: boolean
+          can_manage_products?: boolean
+          can_view_orders?: boolean
+          can_view_quotes?: boolean
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_permissions_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_staff_permission: {
+        Args: { perm: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

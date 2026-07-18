@@ -17,18 +17,35 @@ const OrderConfirmation = () => {
   const reference = searchParams.get("reference") || searchParams.get("trxref");
   const flwTransactionId = searchParams.get("transaction_id");
   const flwTxRef = searchParams.get("tx_ref");
-  const isFlutterwaveRedirect = searchParams.get("provider") === "flutterwave";
+  const provider = searchParams.get("provider");
+  const isFlutterwaveRedirect = provider === "flutterwave";
+  const isKoraRedirect = provider === "kora";
   const [order, setOrder] = useState<Order | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const { bankDetails } = usePaymentSettings();
 
   useEffect(() => {
     const run = async () => {
-      if (reference) {
+      if (reference && !isFlutterwaveRedirect && !isKoraRedirect) {
         setIsVerifying(true);
         const { data } = await supabase.functions.invoke("paystack-verify", {
           body: { reference },
         });
+        setIsVerifying(false);
+        if (data?.order) {
+          setOrder(data.order);
+          return;
+        }
+      }
+
+      if (isKoraRedirect && reference) {
+        setIsVerifying(true);
+        const response = await fetch("/.netlify/functions/kora-verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reference, order_id: orderId }),
+        });
+        const data = await response.json();
         setIsVerifying(false);
         if (data?.order) {
           setOrder(data.order);
@@ -54,7 +71,7 @@ const OrderConfirmation = () => {
       }
     };
     run();
-  }, [orderId, reference, isFlutterwaveRedirect, flwTransactionId, flwTxRef]);
+  }, [orderId, reference, isFlutterwaveRedirect, isKoraRedirect, flwTransactionId, flwTxRef]);
 
   const copyAccountNumber = () => {
     navigator.clipboard.writeText(bankDetails.accountNumber);
@@ -88,6 +105,7 @@ const OrderConfirmation = () => {
   const PAYMENT_METHOD_LABELS: Record<string, string> = {
     paystack: "Paystack",
     flutterwave: "Flutterwave",
+    kora: "Kora",
     bank_transfer: "Bank transfer",
   };
 

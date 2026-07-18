@@ -2,7 +2,7 @@ export function formatNaira(amount: number): string {
   return `₦${Math.round(amount).toLocaleString("en-NG")}`;
 }
 
-export const WHATSAPP_NUMBER = "+2348025525894";
+export const WHATSAPP_NUMBER = "+2349134572901";
 export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}`;
 
 export function whatsappQuoteLink(productName: string): string {
@@ -38,4 +38,3 @@ export function slugify(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
 }
-

@@ -131,11 +131,6 @@ export function SiteHeader() {
                 <DropdownMenuItem onClick={() => navigate("/account/orders")}>
                   <Package className="mr-2 h-4 w-4" /> My Orders
                 </DropdownMenuItem>
-                {profile?.role === "admin" && (
-                  <DropdownMenuItem onClick={() => navigate("/admin/orders")}>
-                    <ShieldCheck className="mr-2 h-4 w-4" /> Admin Dashboard
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut()}>
                   <LogOut className="mr-2 h-4 w-4" /> Sign out

@@ -42,7 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Upload, Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Loader2, Upload, Check, Pencil, Plus, Trash2, X, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira, slugify, type Category } from "@/lib/pharmacy";
@@ -907,6 +907,8 @@ const AdminOrders = () => {
   const [quoteRequests, setQuoteRequests] = useState<MedicationQuoteRequest[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("orders");
   const { categories, refetch: refetchCategories } = useCategories();
 
   const fetchData = () => {
@@ -986,25 +988,90 @@ const AdminOrders = () => {
     return <Navigate to="/" replace />;
   }
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredOrders = normalizedQuery
+    ? orders.filter((o) =>
+        [o.id, o.customer_name, o.email, o.phone, o.payment_method, o.payment_status, o.order_status]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(normalizedQuery))
+      )
+    : orders;
+
+  const filteredQuoteRequests = normalizedQuery
+    ? quoteRequests.filter((q) =>
+        [q.drug_name, q.strength, q.whatsapp_number, q.status]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(normalizedQuery))
+      )
+    : quoteRequests;
+
+  const filteredProducts = normalizedQuery
+    ? products.filter((p) =>
+        [p.name, p.description, p.category]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(normalizedQuery))
+      )
+    : products;
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (!value.trim()) return;
+    const q = value.trim().toLowerCase();
+    const matchesOrders = orders.some((o) =>
+      [o.id, o.customer_name, o.email, o.phone].filter(Boolean).some((f) => String(f).toLowerCase().includes(q))
+    );
+    const matchesQuotes = quoteRequests.some((qr) =>
+      [qr.drug_name, qr.whatsapp_number].filter(Boolean).some((f) => String(f).toLowerCase().includes(q))
+    );
+    const matchesProducts = products.some((p) =>
+      [p.name, p.description].filter(Boolean).some((f) => String(f).toLowerCase().includes(q))
+    );
+
+    if (activeTab === "orders" && !matchesOrders) {
+      if (matchesProducts) setActiveTab("products");
+      else if (matchesQuotes) setActiveTab("quotes");
+    } else if (activeTab === "quotes" && !matchesQuotes) {
+      if (matchesOrders) setActiveTab("orders");
+      else if (matchesProducts) setActiveTab("products");
+    } else if (activeTab === "products" && !matchesProducts) {
+      if (matchesOrders) setActiveTab("orders");
+      else if (matchesQuotes) setActiveTab("quotes");
+    }
+  };
+
   return (
     <PharmacyLayout>
       <div className="container py-10">
-        <h1 className="mb-8 text-3xl font-bold text-foreground">Admin Dashboard</h1>
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search medication, order, or quote..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
 
         {isLoading ? (
           <p className="text-muted-foreground">Loading...</p>
         ) : (
-          <Tabs defaultValue="orders">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
-              <TabsTrigger value="quotes">Quote Requests ({quoteRequests.length})</TabsTrigger>
-              <TabsTrigger value="products">Manage Products ({products.length})</TabsTrigger>
+              <TabsTrigger value="orders">Orders ({filteredOrders.length})</TabsTrigger>
+              <TabsTrigger value="quotes">Quote Requests ({filteredQuoteRequests.length})</TabsTrigger>
+              <TabsTrigger value="products">Manage Products ({filteredProducts.length})</TabsTrigger>
               <TabsTrigger value="categories">Categories ({categories.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="orders">
-              {orders.length === 0 ? (
-                <p className="mt-6 text-muted-foreground">No orders yet.</p>
+              {filteredOrders.length === 0 ? (
+                <p className="mt-6 text-muted-foreground">
+                  {normalizedQuery ? "No orders match your search." : "No orders yet."}
+                </p>
               ) : (
                 <div className="mt-6 overflow-x-auto rounded-xl border border-border">
                   <Table>
@@ -1019,7 +1086,7 @@ const AdminOrders = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {orders.map((order) => (
+                      {filteredOrders.map((order) => (
                         <TableRow key={order.id}>
                           <TableCell className="font-medium">
                             {order.id.slice(0, 8).toUpperCase()}
@@ -1080,8 +1147,10 @@ const AdminOrders = () => {
             </TabsContent>
 
             <TabsContent value="quotes">
-              {quoteRequests.length === 0 ? (
-                <p className="mt-6 text-muted-foreground">No quote requests yet.</p>
+              {filteredQuoteRequests.length === 0 ? (
+                <p className="mt-6 text-muted-foreground">
+                  {normalizedQuery ? "No quote requests match your search." : "No quote requests yet."}
+                </p>
               ) : (
                 <div className="mt-6 overflow-x-auto rounded-xl border border-border">
                   <Table>
@@ -1095,7 +1164,7 @@ const AdminOrders = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {quoteRequests.map((q) => (
+                      {filteredQuoteRequests.map((q) => (
                         <TableRow key={q.id}>
                           <TableCell className="font-medium">
                             {q.drug_name}
@@ -1154,8 +1223,10 @@ const AdminOrders = () => {
                 </p>
                 <AddProductDialog categories={categories} onCreated={handleProductCreated} />
               </div>
-              {products.length === 0 ? (
-                <p className="text-muted-foreground">No products yet.</p>
+              {filteredProducts.length === 0 ? (
+                <p className="text-muted-foreground">
+                  {normalizedQuery ? "No medications match your search." : "No products yet."}
+                </p>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-border">
                   <Table>
@@ -1170,7 +1241,7 @@ const AdminOrders = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {products.map((product) => (
+                      {filteredProducts.map((product) => (
                         <TableRow key={product.id}>
                           <TableCell className="font-medium">
                             <ProductNameEditCell product={product} onUpdated={handleProductUpdated} />

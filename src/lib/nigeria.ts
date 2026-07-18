@@ -5,9 +5,3 @@ export const NIGERIAN_STATES = [
   "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto",
   "Taraba", "Yobe", "Zamfara",
 ];
-
-export const BANK_TRANSFER_DETAILS = {
-  bankName: "Moniepoint MFB",
-  accountName: "Diamond Global Alliance Services Ltd",
-  accountNumber: "4002437816",
-};

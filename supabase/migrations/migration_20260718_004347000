@@ -1,0 +1,11 @@
+-- Add editable bank transfer detail fields to payment_settings (only relevant for bank_transfer row).
+ALTER TABLE public.payment_settings
+  ADD COLUMN bank_name text,
+  ADD COLUMN account_name text,
+  ADD COLUMN account_number text;
+
+UPDATE public.payment_settings
+SET bank_name = 'Moniepoint MFB',
+    account_name = 'Diamond Global Alliance Services Ltd',
+    account_number = '4002437816'
+WHERE method = 'bank_transfer';

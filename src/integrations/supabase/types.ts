@@ -3549,16 +3549,25 @@ export type Database = {
       }
       payment_settings: {
         Row: {
+          account_name: string | null
+          account_number: string | null
+          bank_name: string | null
           is_enabled: boolean
           method: string
           updated_at: string
         }
         Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
           is_enabled?: boolean
           method: string
           updated_at?: string
         }
         Update: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_name?: string | null
           is_enabled?: boolean
           method?: string
           updated_at?: string

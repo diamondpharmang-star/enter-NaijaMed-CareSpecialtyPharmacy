@@ -5,7 +5,7 @@ import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira } from "@/lib/pharmacy";
-import { BANK_TRANSFER_DETAILS } from "@/lib/nigeria";
+import { usePaymentSettings } from "@/hooks/usePaymentSettings";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ const OrderConfirmation = () => {
   const reference = searchParams.get("reference") || searchParams.get("trxref");
   const [order, setOrder] = useState<Order | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const { bankDetails } = usePaymentSettings();
 
   useEffect(() => {
     const run = async () => {
@@ -41,7 +42,7 @@ const OrderConfirmation = () => {
   }, [orderId, reference]);
 
   const copyAccountNumber = () => {
-    navigator.clipboard.writeText(BANK_TRANSFER_DETAILS.accountNumber);
+    navigator.clipboard.writeText(bankDetails.accountNumber);
     toast.success("Account number copied");
   };
 
@@ -116,16 +117,16 @@ const OrderConfirmation = () => {
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Bank name</span>
-                  <span className="font-medium text-foreground">{BANK_TRANSFER_DETAILS.bankName}</span>
+                  <span className="font-medium text-foreground">{bankDetails.bankName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Account name</span>
-                  <span className="font-medium text-foreground">{BANK_TRANSFER_DETAILS.accountName}</span>
+                  <span className="font-medium text-foreground">{bankDetails.accountName}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Account number</span>
                   <span className="flex items-center gap-2 font-medium text-foreground">
-                    {BANK_TRANSFER_DETAILS.accountNumber}
+                    {bankDetails.accountNumber}
                     <button onClick={copyAccountNumber} aria-label="Copy account number">
                       <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
                     </button>

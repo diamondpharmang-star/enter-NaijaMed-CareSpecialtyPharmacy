@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatNaira, whatsappQuoteLink, categoryBadgeClass } from "@/lib/pharmacy";
+import { buildProductJsonLd } from "@/lib/seo";
 import { useCategories } from "@/hooks/useCategories";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
@@ -81,27 +82,17 @@ const ProductDetail = () => {
     );
   }
 
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
+  const productJsonLd = buildProductJsonLd({
+    id: product.id,
+    slug: product.slug,
     name: product.name,
-    description: product.description || undefined,
-    image: product.image_url || undefined,
-    sku: product.id,
-    category: labelFor(product.category),
-    offers: hasPrice
-      ? {
-          "@type": "Offer",
-          priceCurrency: "NGN",
-          price: displayPrice,
-          availability:
-            product.stock_quantity > 0
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
-          url: `${window.location.origin}/product/${product.slug}`,
-        }
-      : undefined,
-  };
+    description: product.description,
+    image_url: product.image_url,
+    categoryLabel: labelFor(product.category),
+    price: hasPrice ? displayPrice : null,
+    stockQuantity: product.stock_quantity,
+    origin: window.location.origin,
+  });
 
   return (
     <PharmacyLayout>

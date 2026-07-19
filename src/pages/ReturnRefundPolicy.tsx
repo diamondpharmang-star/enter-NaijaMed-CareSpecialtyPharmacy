@@ -1,4 +1,5 @@
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { WHATSAPP_NUMBER, WHATSAPP_LINK } from "@/lib/pharmacy";
 
 const SUPPORT_EMAIL = "care@diamondpharmacare.ng";
@@ -6,6 +7,11 @@ const SUPPORT_EMAIL = "care@diamondpharmacare.ng";
 const ReturnRefundPolicy = () => {
   return (
     <PharmacyLayout>
+      <Seo
+        title="Return & Refund Policy"
+        description="Learn about Diamond Pharma Care's return and refund policy for oncology, rare disease, diabetes, and other specialty medication orders."
+        path="/return-refund-policy"
+      />
       <section className="border-b border-border bg-gradient-subtle">
         <div className="container py-10">
           <h1 className="text-3xl font-bold text-foreground">Return &amp; Refund Policy</h1>

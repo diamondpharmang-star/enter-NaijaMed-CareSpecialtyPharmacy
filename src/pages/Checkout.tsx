@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Copy, Info } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -164,6 +165,7 @@ const Checkout = () => {
 
   return (
     <PharmacyLayout>
+      <Seo title="Checkout" path="/checkout" noindex />
       <div className="container py-10">
         <h1 className="mb-8 text-3xl font-bold text-foreground">Checkout</h1>
 

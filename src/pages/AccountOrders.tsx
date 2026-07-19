@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ const AccountOrders = () => {
 
   return (
     <PharmacyLayout>
+      <Seo title="My Orders" path="/account/orders" noindex />
       <div className="container py-10">
         <h1 className="mb-8 text-3xl font-bold text-foreground">My Orders</h1>
 

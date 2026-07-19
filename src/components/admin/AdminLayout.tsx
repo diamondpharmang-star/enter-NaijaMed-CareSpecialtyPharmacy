@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminLayoutProps {
@@ -27,6 +28,7 @@ export function AdminLayout({ title, description, children, isLanding, requireAd
 
   return (
     <PharmacyLayout>
+      <Seo title={`Admin: ${title}`} noindex />
       <div className="container py-10">
         {!isLanding && (
           <Link

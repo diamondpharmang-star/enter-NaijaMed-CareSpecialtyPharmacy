@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2, Building2 } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,6 +85,11 @@ const B2BSignup = () => {
 
   return (
     <PharmacyLayout>
+      <Seo
+        title="Wholesale & B2B Registration"
+        description="Create a business account and request bulk pricing for your Pharmacy, Clinic, Hospital, or NGO."
+        path="/b2b/signup"
+      />
       <div className="container py-16">
         <div className="mx-auto max-w-2xl rounded-xl border border-border bg-card p-8">
           <div className="flex items-center gap-3">

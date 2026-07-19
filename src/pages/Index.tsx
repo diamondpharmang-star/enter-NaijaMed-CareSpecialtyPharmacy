@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, Truck, Lock, Stethoscope, ArrowRight, MessageCircle, Camera, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { WHATSAPP_LINK, categoryBadgeClass } from "@/lib/pharmacy";
@@ -47,6 +48,11 @@ const Index = () => {
 
   return (
     <PharmacyLayout>
+      <Seo
+        title="Diamond Pharma Care | Oncology, Rare Disease & Diabetes Medication in Nigeria"
+        description="Nigeria's trusted specialty pharmacy for oncology, rare disease, diabetes, and other hard-to-find medication — delivered safely nationwide with secure online checkout."
+        path="/"
+      />
       <section className="relative overflow-hidden bg-gradient-hero text-primary-foreground">
         <div className="container relative z-10 flex flex-col items-start gap-6 py-20 md:py-28">
           <span className="rounded-full bg-primary-foreground/10 px-4 py-1 text-sm font-medium backdrop-blur">

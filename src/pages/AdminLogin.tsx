@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,7 @@ const AdminLogin = () => {
 
   return (
     <PharmacyLayout>
+      <Seo title="Admin Sign In" path="/admin-login" noindex />
       <div className="container flex items-center justify-center py-16">
         <div className="w-full max-w-md rounded-xl border border-border bg-card p-8">
           <div className="flex items-center gap-3">

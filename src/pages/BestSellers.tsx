@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -25,6 +26,11 @@ const BestSellers = () => {
 
   return (
     <PharmacyLayout>
+      <Seo
+        title="Best Selling Medication"
+        description="Our most requested oncology, rare disease, and diabetes medication, trusted by customers across Nigeria."
+        path="/best-sellers"
+      />
       <section className="border-b border-border bg-gradient-subtle">
         <div className="container py-10">
           <h1 className="text-3xl font-bold text-foreground">Best Sellers</h1>

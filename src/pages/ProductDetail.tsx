@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ShoppingCart, Minus, Plus, ArrowLeft, MessageCircle } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +70,7 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <PharmacyLayout>
+        <Seo title="Product Not Found" noindex />
         <div className="container py-24 text-center">
           <p className="text-muted-foreground">Product not found.</p>
           <Button asChild variant="link">
@@ -79,8 +81,37 @@ const ProductDetail = () => {
     );
   }
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || undefined,
+    image: product.image_url || undefined,
+    sku: product.id,
+    category: labelFor(product.category),
+    offers: hasPrice
+      ? {
+          "@type": "Offer",
+          priceCurrency: "NGN",
+          price: displayPrice,
+          availability:
+            product.stock_quantity > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          url: `${window.location.origin}/product/${product.slug}`,
+        }
+      : undefined,
+  };
+
   return (
     <PharmacyLayout>
+      <Seo
+        title={product.name}
+        description={product.description || `${product.name} — available at Diamond Pharma Care.`}
+        image={product.image_url || undefined}
+        path={`/product/${product.slug}`}
+        jsonLd={productJsonLd}
+      />
       <div className="container py-10">
         <Link to="/shop" className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to shop

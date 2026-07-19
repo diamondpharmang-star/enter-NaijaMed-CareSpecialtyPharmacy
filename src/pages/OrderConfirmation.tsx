@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Loader2, XCircle, Copy } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatNaira } from "@/lib/pharmacy";
@@ -64,6 +65,7 @@ const OrderConfirmation = () => {
   if (isVerifying) {
     return (
       <PharmacyLayout>
+        <Seo title="Order Confirmation" path="/order-confirmation" noindex />
         <div className="container flex flex-col items-center gap-4 py-24 text-center">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
           <p className="text-muted-foreground">Verifying your payment...</p>
@@ -75,6 +77,7 @@ const OrderConfirmation = () => {
   if (!order) {
     return (
       <PharmacyLayout>
+        <Seo title="Order Confirmation" path="/order-confirmation" noindex />
         <div className="container py-24 text-center text-muted-foreground">
           Order not found.
         </div>
@@ -93,6 +96,7 @@ const OrderConfirmation = () => {
 
   return (
     <PharmacyLayout>
+      <Seo title="Order Confirmation" path="/order-confirmation" noindex />
       <div className="container flex flex-col items-center py-16">
         <div className="w-full max-w-xl rounded-xl border border-border bg-card p-8 text-center">
           {isFailed ? (

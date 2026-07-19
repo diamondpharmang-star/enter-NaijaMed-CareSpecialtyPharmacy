@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -62,8 +63,18 @@ const Shop = () => {
     setSearchParams(searchParams);
   };
 
+  const activeCategoryLabel = categories.find((c) => c.key === activeCategory)?.label;
+  const pageTitle = activeCategoryLabel
+    ? `Shop ${activeCategoryLabel} Medication`
+    : "Shop Medication";
+
   return (
     <PharmacyLayout>
+      <Seo
+        title={pageTitle}
+        description="Browse our specialty catalog of oncology, rare disease, diabetes, and other hard-to-find medication with secure checkout and nationwide delivery in Nigeria."
+        path="/shop"
+      />
       <section className="border-b border-border bg-gradient-subtle">
         <div className="container py-10">
           <h1 className="text-3xl font-bold text-foreground">Shop Medication</h1>

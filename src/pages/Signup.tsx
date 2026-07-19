@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +48,7 @@ const Signup = () => {
 
   return (
     <PharmacyLayout>
+      <Seo title="Create Account" path="/signup" noindex />
       <div className="container flex items-center justify-center py-16">
         <div className="w-full max-w-md rounded-xl border border-border bg-card p-8">
           <h1 className="text-2xl font-bold text-foreground">Create your account</h1>

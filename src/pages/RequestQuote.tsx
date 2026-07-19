@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Loader2, MessageCircle, Upload, X, Pill, Camera, Send, ShieldCheck, Clock, Sparkles } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,6 +130,11 @@ const RequestQuote = () => {
 
   return (
     <PharmacyLayout>
+      <Seo
+        title="Request a Medication Price Quote"
+        description="Can't find your medication in our catalog? Tell us the drug name and strength and our pharmacist team will reply on WhatsApp with pricing and availability."
+        path="/request-quote"
+      />
       <section className="relative overflow-hidden bg-gradient-hero text-primary-foreground">
         <div className="container relative z-10 flex flex-col items-start gap-4 py-16 md:py-20">
           <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground/10 px-4 py-1 text-sm font-medium backdrop-blur">

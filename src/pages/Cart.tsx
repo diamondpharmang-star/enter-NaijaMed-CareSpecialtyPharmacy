@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Minus, Plus, Trash2, ArrowRight, ShoppingBag } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
+import { Seo } from "@/components/seo/Seo";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { formatNaira } from "@/lib/pharmacy";
@@ -14,6 +15,7 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <PharmacyLayout>
+        <Seo title="Your Cart" path="/cart" noindex />
         <div className="container flex flex-col items-center gap-4 py-24 text-center">
           <ShoppingBag className="h-12 w-12 text-muted-foreground" />
           <h1 className="text-2xl font-bold text-foreground">Your cart is empty</h1>
@@ -28,6 +30,7 @@ const Cart = () => {
 
   return (
     <PharmacyLayout>
+      <Seo title="Your Cart" path="/cart" noindex />
       <div className="container py-10">
         <h1 className="mb-8 text-3xl font-bold text-foreground">Your Cart</h1>
 

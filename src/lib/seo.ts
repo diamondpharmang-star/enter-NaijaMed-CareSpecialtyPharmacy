@@ -38,6 +38,32 @@ export interface ProductJsonLdInput {
   origin: string;
 }
 
+export const RETURN_WINDOW_DAYS = 2;
+
+/**
+ * Builds a schema.org MerchantReturnPolicy matching Google Merchant Center's required
+ * return-policy fields, aligned with the written Return & Refund Policy page: a 48-hour
+ * (2-day) window limited to wrong item / damaged / expired / defective orders, reported to
+ * support with no physical mail-back required (medication is not accepted back for safety
+ * reasons), free of charge, refunded in full.
+ */
+export function buildMerchantReturnPolicyJsonLd(origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "MerchantReturnPolicy",
+    name: `${SITE_NAME} Return & Refund Policy`,
+    url: `${origin}/return-refund-policy`,
+    applicableCountry: "NG",
+    returnPolicyCountry: "NG",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: RETURN_WINDOW_DAYS,
+    returnMethod: "https://schema.org/KeepProduct",
+    returnFees: "https://schema.org/FreeReturn",
+    refundType: "https://schema.org/FullRefund",
+    itemCondition: "https://schema.org/NewCondition",
+  };
+}
+
 /**
  * Builds Google-recommended Product structured data (JSON-LD) for a product page.
  * Includes brand, seller, and offer availability/condition so eligible products can
@@ -77,6 +103,7 @@ export function buildProductJsonLd(product: ProductJsonLdInput) {
               "@type": "Organization",
               name: SITE_NAME,
             },
+            hasMerchantReturnPolicy: buildMerchantReturnPolicyJsonLd(product.origin),
           },
         }
       : {}),

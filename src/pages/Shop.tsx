@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
@@ -40,8 +40,12 @@ const Shop = () => {
     });
   }, [activeCategory]);
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+  const filteredProducts = useMemo(
+    () =>
+      products.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase())
+      ),
+    [products, search]
   );
 
   const updateSearch = (value: string) => {
@@ -68,12 +72,32 @@ const Shop = () => {
     ? `Shop ${activeCategoryLabel} Medication`
     : "Shop Medication";
 
+  // Product collection signal for Google rich results. Only emitted once
+  // products have loaded and the visible list is non-empty, so the empty /
+  // loading states never produce broken structured data.
+  const itemListLd = useMemo<Record<string, unknown> | undefined>(() => {
+    if (filteredProducts.length === 0) return undefined;
+    const origin = window.location.origin;
+    return {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: pageTitle,
+      itemListElement: filteredProducts.map((product, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: product.name,
+        url: `${origin}/product/${product.slug}`,
+      })),
+    };
+  }, [filteredProducts, pageTitle]);
+
   return (
     <PharmacyLayout>
       <Seo
         title={pageTitle}
         description="Browse our specialty catalog of oncology, rare disease, diabetes, and other hard-to-find medication with secure checkout and nationwide delivery in Nigeria."
         path="/shop"
+        jsonLd={itemListLd}
       />
       <section className="border-b border-border bg-gradient-subtle">
         <div className="container py-10">

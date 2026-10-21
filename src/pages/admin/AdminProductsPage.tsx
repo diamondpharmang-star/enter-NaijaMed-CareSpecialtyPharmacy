@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Search, Loader2, Upload, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { RequirePermission } from "@/components/admin/RequirePermission";
+import { DataStateNotice } from "@/components/pharmacy/DataStateNotice";
 import {
   Table,
   TableBody,
@@ -702,19 +703,29 @@ function ProductCategorySelect({
 const AdminProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { categories } = useCategories();
 
-  useEffect(() => {
-    supabase
+  const loadProducts = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    const { data, error } = await supabase
       .from("products")
       .select("*")
-      .order("name", { ascending: true })
-      .then(({ data }) => {
-        setProducts(data ?? []);
-        setIsLoading(false);
-      });
+      .order("name", { ascending: true });
+
+    if (error) {
+      setLoadError("The product list didn't respond. Check your connection and try again.");
+    } else {
+      setProducts(data ?? []);
+    }
+    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    void loadProducts();
+  }, [loadProducts]);
 
   const handleProductImageUploaded = (productId: string, imageUrl: string) => {
     setProducts((prev) => prev.map((p) => (p.id === productId ? { ...p, image_url: imageUrl } : p)));
@@ -746,6 +757,14 @@ const AdminProductsPage = () => {
       <RequirePermission permission="can_manage_products">
       {isLoading ? (
         <p className="text-muted-foreground">Loading...</p>
+      ) : loadError ? (
+        <DataStateNotice
+          variant="error"
+          title="Product list unavailable"
+          description={loadError}
+          onRetry={loadProducts}
+          isRetrying={isLoading}
+        />
       ) : (
         <>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

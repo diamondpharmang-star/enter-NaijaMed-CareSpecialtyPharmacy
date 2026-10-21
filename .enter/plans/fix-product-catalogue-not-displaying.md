@@ -69,16 +69,17 @@ No database schema, RLS or data changes. No changes to cart, checkout, auth or a
 
 ## Implementation checklist
 
-- [ ] Backend instance resumed and `select count(*) from products` returns 100.
-- [ ] `src/hooks/useProducts.ts` created with `category`, `bestSellerOnly`, `limit`, `order` options, `error`, `refetch`, and one automatic retry.
-- [ ] `useProducts` never clears already-loaded products when a refetch fails.
-- [ ] `useCategories` exposes `error` and `refetch` and retries once.
-- [ ] `DataStateNotice` supports `error` (with retry button), `empty`, `loading` using semantic tokens and lucide icons only.
-- [ ] `Shop` renders error notice with retry, keeps "No products match your search." for a filtered empty result.
-- [ ] `Shop` emits `ItemList` JSON-LD only when products are loaded and the visible list is non-empty.
-- [ ] `BestSellers` renders error notice with retry instead of "No best sellers yet." on fetch failure.
-- [ ] `Index` featured section renders retry notice on failure instead of an empty grid.
-- [ ] `AdminProductsPage` renders retry notice on failure instead of "No products yet."
+- [x] `src/hooks/useProducts.ts` created with `category`, `bestSellerOnly`, `limit`, `order` options, `error`, `refetch`, and one automatic retry.
+- [x] `useProducts` never clears already-loaded products when a refetch fails.
+- [x] `useCategories` exposes `error` and `refetch` and retries once.
+- [x] `DataStateNotice` supports `error` (with retry button), `empty`, `loading` using semantic tokens and lucide icons only.
+- [x] `Shop` renders error notice with retry, keeps a distinct empty state for a filtered result.
+- [x] `Shop` emits `ItemList` JSON-LD only when products are loaded and the visible list is non-empty.
+- [x] `BestSellers` renders error notice with retry instead of "No best sellers yet." on fetch failure.
+- [x] `Index` featured section renders retry notice on failure instead of an empty grid.
+- [x] `AdminProductsPage` renders retry notice on failure instead of "No products yet."
+- [ ] Blocked: backend instance is billing-suspended, so `select count(*) from products` still cannot run. Needs reactivation from the Cloud panel before product rows can be served again.
+
 
 ## Verification checklist
 

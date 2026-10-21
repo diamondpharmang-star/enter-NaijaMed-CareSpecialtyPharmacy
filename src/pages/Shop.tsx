@@ -4,41 +4,23 @@ import { Search } from "lucide-react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { Seo } from "@/components/seo/Seo";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
+import { DataStateNotice } from "@/components/pharmacy/DataStateNotice";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useCategories } from "@/hooks/useCategories";
-import type { Tables } from "@/integrations/supabase/types";
+import { useProducts } from "@/hooks/useProducts";
 import { cn } from "@/lib/utils";
-
-type Product = Tables<"products">;
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeCategory = searchParams.get("category") || "all";
   const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { categories } = useCategories();
+  const { products, isLoading, error, refetch } = useProducts({ category: activeCategory });
 
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
   }, [searchParams]);
-
-  useEffect(() => {
-    setIsLoading(true);
-    let query = supabase.from("products").select("*").eq("is_active", true);
-    if (activeCategory !== "all") {
-      query = query.eq("category", activeCategory);
-    }
-    query
-      .order("price", { ascending: true, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-      setProducts(data ?? []);
-      setIsLoading(false);
-    });
-  }, [activeCategory]);
 
   const filteredProducts = useMemo(
     () =>
@@ -142,10 +124,26 @@ const Shop = () => {
           </div>
         </div>
 
-        {isLoading ? (
-          <p className="py-16 text-center text-muted-foreground">Loading products...</p>
+        {isLoading && products.length === 0 ? (
+          <DataStateNotice variant="loading" title="Loading medication..." />
+        ) : error && products.length === 0 ? (
+          <DataStateNotice
+            variant="error"
+            title="We couldn't load the catalogue"
+            description={error}
+            onRetry={refetch}
+            isRetrying={isLoading}
+          />
         ) : filteredProducts.length === 0 ? (
-          <p className="py-16 text-center text-muted-foreground">No products found.</p>
+          <DataStateNotice
+            variant="empty"
+            title={search ? `No medication matches "${search}"` : "No products found"}
+            description={
+              search
+                ? "Try a different drug name, or request a price quote and our pharmacists will source it for you."
+                : "There are no products in this category yet."
+            }
+          />
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {filteredProducts.map((product) => (

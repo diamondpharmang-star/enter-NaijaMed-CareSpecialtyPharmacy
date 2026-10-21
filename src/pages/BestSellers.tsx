@@ -1,28 +1,14 @@
-import { useEffect, useState } from "react";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { Seo } from "@/components/seo/Seo";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Product = Tables<"products">;
+import { DataStateNotice } from "@/components/pharmacy/DataStateNotice";
+import { useProducts } from "@/hooks/useProducts";
 
 const BestSellers = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    supabase
-      .from("products")
-      .select("*")
-      .eq("is_best_seller", true)
-      .eq("is_active", true)
-      .order("name", { ascending: true })
-      .then(({ data }) => {
-        setProducts(data ?? []);
-        setIsLoading(false);
-      });
-  }, []);
+  const { products, isLoading, error, refetch } = useProducts({
+    bestSellerOnly: true,
+    order: "name",
+  });
 
   return (
     <PharmacyLayout>
@@ -41,10 +27,22 @@ const BestSellers = () => {
       </section>
 
       <section className="container py-10">
-        {isLoading ? (
-          <p className="py-16 text-center text-muted-foreground">Loading products...</p>
+        {isLoading && products.length === 0 ? (
+          <DataStateNotice variant="loading" title="Loading best sellers..." />
+        ) : error && products.length === 0 ? (
+          <DataStateNotice
+            variant="error"
+            title="We couldn't load the best sellers"
+            description={error}
+            onRetry={refetch}
+            isRetrying={isLoading}
+          />
         ) : products.length === 0 ? (
-          <p className="py-16 text-center text-muted-foreground">No best sellers yet.</p>
+          <DataStateNotice
+            variant="empty"
+            title="No best sellers yet"
+            description="Our pharmacists are still curating this list. Browse the full catalogue in the meantime."
+          />
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product) => (

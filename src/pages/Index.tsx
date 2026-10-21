@@ -1,16 +1,13 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { ShieldCheck, Truck, Lock, Stethoscope, ArrowRight, MessageCircle, Camera, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PharmacyLayout } from "@/components/pharmacy/PharmacyLayout";
 import { Seo } from "@/components/seo/Seo";
 import { ProductCard } from "@/components/pharmacy/ProductCard";
-import { supabase } from "@/integrations/supabase/client";
+import { DataStateNotice } from "@/components/pharmacy/DataStateNotice";
 import { WHATSAPP_LINK, categoryBadgeClass } from "@/lib/pharmacy";
 import { useCategories } from "@/hooks/useCategories";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Product = Tables<"products">;
+import { useProducts } from "@/hooks/useProducts";
 
 const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   oncology: "Targeted therapies and chemotherapy medication for cancer care.",
@@ -33,18 +30,8 @@ const QUOTE_STEPS = [
 ];
 
 const Index = () => {
-  const [featured, setFeatured] = useState<Product[]>([]);
   const { categories } = useCategories();
-
-  useEffect(() => {
-    supabase
-      .from("products")
-      .select("*")
-      .eq("is_active", true)
-      .order("price", { ascending: true, nullsFirst: false })
-      .limit(4)
-      .then(({ data }) => setFeatured(data ?? []));
-  }, []);
+  const { products: featured, isLoading, error, refetch } = useProducts({ limit: 4 });
 
   return (
     <PharmacyLayout>
@@ -133,11 +120,29 @@ const Index = () => {
               </Link>
             </Button>
           </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {isLoading && featured.length === 0 ? (
+            <DataStateNotice variant="loading" title="Loading featured medication..." />
+          ) : error && featured.length === 0 ? (
+            <DataStateNotice
+              variant="error"
+              title="We couldn't load the medication list"
+              description={error}
+              onRetry={refetch}
+              isRetrying={isLoading}
+            />
+          ) : featured.length === 0 ? (
+            <DataStateNotice
+              variant="empty"
+              title="No featured medication yet"
+              description="Browse the full catalogue or ask our pharmacists to source a specific drug for you."
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {featured.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

@@ -146,6 +146,17 @@ To deploy, open your Enter.pro project and click "Publish"
 
 Your app will automatically build and go live at your production URL.
 
+### Kora payments
+
+Kora checkout runs through Netlify Functions so the provider credential remains server-side. Configure these environment variables for the deployed site:
+
+- `KORA_SECRET_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_URL` or the existing `VITE_SUPABASE_URL`
+
+The checkout initialization function supplies Kora with the deployed callback and webhook URLs automatically. Incoming webhook requests are validated with Kora's signature before payment verification runs.
+After adding the environment variables, enable Kora from the admin Payment Methods page.
+
 ---
 
 ✨ Keep prompting, keep building — Enter.pro handles the rest.
